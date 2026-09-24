@@ -1,0 +1,138 @@
+# Keep the prefill short - the structured details are captured by the
+# form fields below.
+title: '🧠 Idea: <Problem/Opportunity> - <Area/Component>'
+labels:
+  - 'type: discussion'
+  - 'status: needs triage'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🧠 Ideas
+        Brainstorm features or improvements before opening a formal Feature Request.
+        Focus on the user problem, who’s affected, and the impact. Links, sketches,
+        and quick prototypes are welcome.
+
+  - type: dropdown
+    id: idea_type
+    attributes:
+      label: '🧭 Idea type'
+      options:
+        - Product idea
+        - UX/UI improvement
+        - API change / contract
+        - Authentication / IAM
+        - Billing / pricing
+        - Performance / efficiency
+        - Reliability / resiliency
+        - Security / hardening
+        - Accessibility (A11y)
+        - Internationalization / Localization (i18n/L10n)
+        - Observability / telemetry
+        - Tooling / Developer Experience (DevEx)
+        - Testing strategy
+        - Data / analytics
+        - Integration / ecosystem
+        - Docs / education
+        - Governance / policy / compliance
+        - Workflow / process
+        - Experiment / hypothesis
+        - Research question
+        - Prototype / PoC concept
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: '❓ Problem to solve'
+      description: 'What user problem/opportunity are we addressing and why now?'
+      placeholder: 'Who is affected and what’s the pain or opportunity? Include examples.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: audience
+    attributes:
+      label: '👥 Who is affected'
+      description: 'Personas/teams and approximate scope.'
+      placeholder: 'End users, admins, operators, developers… (All / Many / Some / Few)'
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: '🎯 Impact'
+      description: 'Expected outcomes, value, or risks if we do or don’t pursue this.'
+      placeholder: "- User value: …\n- Business value: …\n- Risks/trade-offs: …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_workaround
+    attributes:
+      label: '🔎 Current experience / workaround (if any)'
+      description: 'What happens today? Any temporary fixes or known pain points?'
+      placeholder: 'Describe current workflow and gaps.'
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: '💡 Rough direction'
+      description: 'Sketch a potential approach. Wireframes, APIs, or examples welcome.'
+      placeholder: "- Idea A: …\n- Idea B: …\n- Open questions: …"
+
+  - type: textarea
+    id: success_metrics
+    attributes:
+      label: '📈 Signals for success (optional)'
+      description: 'How would we know this idea worked?'
+      placeholder: 'Adoption, conversion, latency, error rate, time-on-task, support volume…'
+
+  - type: checkboxes
+    id: affected_areas
+    attributes:
+      label: '🧩 Affected areas (optional)'
+      description: 'Maps to the shared area: labels. Tick any that apply.'
+      options:
+        - label: 'area: analytics'
+        - label: 'area: api'
+        - label: 'area: backend'
+        - label: 'area: database'
+        - label: 'area: dx'
+        - label: 'area: frontend'
+        - label: 'area: governance'
+        - label: 'area: i18n'
+        - label: 'area: infrastructure'
+        - label: 'area: mobile'
+        - label: 'area: ui/ux'
+
+  - type: checkboxes
+    id: platform
+    attributes:
+      label: '🧰 Platform (optional)'
+      options:
+        - label: Web
+        - label: Mobile
+        - label: Desktop
+        - label: Other
+
+  - type: textarea
+    id: links
+    attributes:
+      label: '🔗 References'
+      description: 'Prior art, related issues, prototypes, or research.'
+      placeholder: "- Issue/PR: …\n- Prototype: …\n- Article/benchmark: …\n- Design doc: …"
+
+  - type: checkboxes
+    id: participation
+    attributes:
+      label: '👋 Call to action'
+      options:
+        - label: 'Feedback welcome'
+        - label: 'Looking for collaborators'
+        - label: 'Design input requested'
+        - label: 'Maintainer review requested'
+        - label: 'Usability testing volunteers'

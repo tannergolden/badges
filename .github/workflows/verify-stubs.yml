@@ -1,0 +1,89 @@
+# Installed from tannergolden/standards. Edit freely: this file is YOURS.
+#
+# Checks that every stub in this repository declares the permission ceiling
+# its called workflow actually needs, and passes only inputs that workflow
+# accepts.
+#
+# ⚠️ THIS IS THE CHEAPEST CHECK HERE AND THE MOST EXPENSIVE FAILURE IT
+# PREVENTS. A caller's `permissions:` block is a CEILING, not a grant: it
+# caps what the called workflow may request. Ask for less than the callee
+# declares and the run fails at STARTUP - no job, no step, no log, nothing in
+# the Actions tab to read. Ask for more and you have handed a workflow scopes
+# it never said it needed.
+#
+# ⚠️ IT READS TWO REFS, AND THAT IS THE POINT. The stubs pin `@v1`, so the
+# check resolves them against `v1` - the code you actually run. But `v1` is a
+# MOVING tag, which means the same commit can pass at one moment and fail at
+# another: push a stub that uses something newer than the current release and
+# it fails until the release moves. That is a true failure (the stub really is
+# broken meanwhile) but it is a DIFFERENT failure from a typo, so it is
+# reported differently. The standards default branch is read purely to tell
+# the two apart:
+#
+#   missing at v1, missing on the default branch  -> a real mistake
+#   missing at v1, PRESENT on the default branch  -> waiting on a release
+#
+# The rule that avoids the second entirely: ship standards, cut the release
+# so `v1` moves, THEN change the stubs. Remember that re-signing commits is
+# also a push, and lands them in a new minute.
+#
+# Runs when a workflow file changes, and once a day - so a failure that was
+# only ever waiting on a release clears itself without anyone re-running it.
+
+name: '🔬 Verify Stub Ceilings'
+
+on:
+  push:
+    paths: ['.github/workflows/**']
+  pull_request:
+    paths: ['.github/workflows/**']
+  schedule:
+    - cron: '15 7 * * *' # daily: clears a stale "waiting on a release"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  ceilings:
+    name: '🔬 Stub Permission Ceilings'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # read this repository's workflows
+    steps:
+      - name: '🛡️ Harden Runner'
+        uses: tannergolden/standards/actions/harden@v1
+        with:
+          egress-policy: audit
+          notice: '🔬 Verifying that every stub asks for what its called workflow declares.'
+
+      - name: '📂 Checkout'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: '📥 Fetch the standards at the pinned ref'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: tannergolden/standards
+          ref: v1
+          path: .standards
+          persist-credentials: false
+
+      # The same repository at its DEFAULT branch, used only to classify a
+      # failure. `continue-on-error` on purpose: losing this comparison makes
+      # the diagnosis vaguer, it does not make the check wrong.
+      - name: '📥 Fetch the standards at its default branch'
+        continue-on-error: true
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: tannergolden/standards
+          path: .standards-latest
+          persist-credentials: false
+
+      - name: '🔬 Compare every ceiling against its callee'
+        run: python3 .github/scripts/verify-stub-ceilings.py
