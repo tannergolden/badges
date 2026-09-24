@@ -178,8 +178,9 @@ land beside your data file exactly where you asked for them.
 
 ### Render on every push, and commit what changed
 
-<details>
-<summary>Full workflow: render on push, then commit what changed</summary>
+`commit: true` stages what the run changed, commits it, and pushes to the
+branch that was checked out. The job needs `contents: write` and nothing
+else: no git steps of its own, no identity to configure.
 
 ```yaml
 name: Badges
@@ -193,6 +194,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: tannergolden/emblems@v1
+        with:
+          mode: render
+          commit: true
+```
+
+That commit is **authored by Tanner Golden**, the kit's author, and
+committed by the workflow that ran it, `github-actions[bot]`. What changed
+is the kit's output rather than anything your workflow wrote, so the author
+field says who drew the badges and the committer field says what pushed
+them, the way a dependency update carries its bot's name. The subject is
+`chore(badges): 🏷️ re-render badges` unless `commit-message` says
+otherwise, and the body records the mode, the data file, and a link to the
+run that made it. Only what the run changed is staged, so a checkout that
+was already carrying edits keeps them.
+
+Rather commit yourself, under an identity of your own? Leave `commit` off:
+the `changed` output still says whether there is anything to commit.
+
+<details>
+<summary>Committing yourself, from the changed output</summary>
+
+```yaml
       - uses: tannergolden/emblems@v1
         id: badges
         with:
@@ -225,6 +249,7 @@ SVGs no longer match the data file.
 `set` writes measured values into the data file before rendering, preserving
 its comments and layout. `randomize-seed` rotates the decorative colors, keyed
 by the ISO week, so the pick is stable within a week and changes every Monday.
+With `commit: true`, the refreshed values land on the branch by themselves.
 
 ```yaml
 on:
@@ -234,6 +259,8 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
       - id: measure
@@ -245,6 +272,7 @@ jobs:
             build=Passing:green
             last-commit=${{ steps.measure.outputs.commit }}:green
           randomize-seed: ${{ github.run_id }}
+          commit: true
 ```
 
 ### Migrate a README that already uses shields.io
@@ -275,15 +303,18 @@ repository.
 
 ### Action inputs
 
-| Input            | Default              | Meaning                                                         |
-| :--------------- | :------------------- | :--------------------------------------------------------------- |
-| `mode`           | `render`             | `render`, `check`, `localize`, `all`, or `snippets`.            |
-| `data`           | `.github/badges.yml` | Badge data file, relative to the repository root.               |
-| `out`            | `assets/badges`      | Output directory for the committed SVGs.                        |
-| `set`            | none                 | Newline-separated `NAME=MESSAGE[:COLOR]` updates applied first. |
-| `randomize-seed` | none                 | Rotate decorative colors, keyed by this seed.                   |
+| Input            | Default              | Meaning                                                                  |
+| :--------------- | :------------------- | :----------------------------------------------------------------------- |
+| `mode`           | `render`             | `render`, `check`, `localize`, `all`, or `snippets`.                     |
+| `data`           | `.github/badges.yml` | Badge data file, relative to the repository root.                        |
+| `out`            | `assets/badges`      | Output directory for the committed SVGs.                                 |
+| `set`            | none                 | Newline-separated `NAME=MESSAGE[:COLOR]` updates applied first.          |
+| `randomize-seed` | none                 | Rotate decorative colors, keyed by this seed.                            |
+| `commit`         | `false`              | `true` commits what the run changed, as the kit's author, and pushes it. |
+| `commit-message` | per mode             | Subject of that commit. The body is written for you.                     |
 
-One output, `changed`, is `'true'` when the run modified a tracked file.
+Two outputs: `changed` is `'true'` when the run modified a tracked file, and
+`commit` is the SHA the run pushed, or empty when it made no commit.
 
 ---
 

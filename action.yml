@@ -46,11 +46,32 @@ inputs:
       Empty means no rotation.
     required: false
     default: ''
+  commit:
+    description: >-
+      'true' stages what the run changed, commits it, and pushes to the
+      branch that was checked out, so the workflow needs no git steps of its
+      own. The commit is AUTHORED by the kit's author and committed by the
+      workflow that ran it (github-actions[bot]); the README says why. Needs
+      `contents: write` on the job and a checkout that kept its token, which
+      is the actions/checkout default. Ignored in check and snippets modes,
+      which write nothing.
+    required: false
+    default: 'false'
+  commit-message:
+    description: >-
+      Subject line of that commit. Empty picks one for the mode, e.g.
+      "chore(badges): 🏷️ re-render badges". The body is written by the kit
+      and records the mode, the data file, and a link to the run.
+    required: false
+    default: ''
 
 outputs:
   changed:
     description: "'true' when the run modified any tracked file."
     value: ${{ steps.run.outputs.changed }}
+  commit:
+    description: 'The SHA of the commit the run pushed, or empty when it made none.'
+    value: ${{ steps.run.outputs.commit }}
 
 runs:
   using: 'composite'
@@ -69,7 +90,18 @@ runs:
         KIT_OUT: ${{ inputs.out }}
         KIT_SET: ${{ inputs.set }}
         KIT_SEED: ${{ inputs.randomize-seed }}
+        KIT_COMMIT: ${{ inputs.commit }}
+        KIT_MESSAGE: ${{ inputs.commit-message }}
         KIT_PATH: ${{ github.action_path }}
+        # Who a generated commit is by. The badges are the kit's output, not
+        # something the consumer's workflow wrote, so the kit's AUTHOR is the
+        # author of the commit that carries them, and the workflow that ran
+        # the kit is the COMMITTER: the history then says both who drew the
+        # badges and what pushed them. The noreply addresses are the ones
+        # GitHub resolves to the account and to the Actions bot.
+        KIT_AUTHOR: 'Tanner Golden <24684994+tannergolden@users.noreply.github.com>'
+        KIT_COMMITTER_NAME: 'github-actions[bot]'
+        KIT_COMMITTER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
       run: |
         set -euo pipefail
         case "$KIT_MODE" in
@@ -89,8 +121,13 @@ runs:
         out="$root/$KIT_OUT"
         # --untracked-files=all: the default collapses a new directory to one
         # "?? dir/" line, so a second badge rendered into it would read as
-        # "nothing changed".
-        before="$(git -C "$root" status --porcelain --untracked-files=all 2>/dev/null || true)"
+        # "nothing changed". Read NUL-separated so no path is ever quoted;
+        # a newline inside a filename is the one thing this cannot carry, and
+        # no badge tree has one.
+        snapshot() {
+          git -C "$root" status --porcelain=v1 -z --untracked-files=all 2>/dev/null | tr '\0' '\n' || true
+        }
+        before="$(snapshot)"
 
         # The codemod goes first: in localize/all it may create badges the
         # renderer then reserves, and in check mode it is the hotlink gate.
@@ -133,9 +170,53 @@ runs:
           fi
         fi
 
-        after="$(git -C "$root" status --porcelain --untracked-files=all 2>/dev/null || true)"
+        after="$(snapshot)"
         if [ "$before" != "$after" ]; then
           echo "changed=true" >> "$GITHUB_OUTPUT"
         else
           echo "changed=false" >> "$GITHUB_OUTPUT"
         fi
+
+        # Commit and push what THIS run changed, as the kit's author.
+        sha=""
+        if [ "$KIT_COMMIT" = "true" ] && [ "$KIT_MODE" != "check" ] && [ "$KIT_MODE" != "snippets" ] && [ "$before" != "$after" ]; then
+          branch="$(git -C "$root" symbolic-ref --quiet --short HEAD || true)"
+          if [ -z "$branch" ]; then
+            echo "::error::commit: the checkout is not on a branch, so there is nowhere to push. Check out the branch to update; a pull_request checkout is a detached merge commit."
+            exit 1
+          fi
+          # Only the paths whose status THIS run changed are staged, never
+          # whatever the checkout was already carrying, so the commit is the
+          # kit's output and nothing else. A path that was already modified
+          # before the run keeps its status line and is left alone.
+          mapfile -t paths < <(
+            comm -13 <(printf '%s\n' "$before" | LC_ALL=C sort) <(printf '%s\n' "$after" | LC_ALL=C sort) \
+              | grep -E '^[ MADRCUT?!]{2} ' | cut -c4-
+          )
+          if [ "${#paths[@]}" -gt 0 ]; then
+            git -C "$root" add -A -- "${paths[@]}"
+          fi
+          if git -C "$root" diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            subject="$KIT_MESSAGE"
+            if [ -z "$subject" ]; then
+              case "$KIT_MODE" in
+                localize) subject='chore(badges): 🏷️ localize shields.io badges' ;;
+                all)      subject='chore(badges): 🏷️ localize and re-render badges' ;;
+                *)        subject='chore(badges): 🏷️ re-render badges' ;;
+              esac
+            fi
+            version="$("$PY" "$KIT_PATH/src/badge-kit.py" --version)"
+            body="$(printf 'Drawn by tannergolden/emblems (%s), mode %s, from\n%s into %s, by the "%s" workflow:\n%s/%s/actions/runs/%s' \
+              "$version" "$KIT_MODE" "$KIT_DATA" "$KIT_OUT" "${GITHUB_WORKFLOW:-}" \
+              "${GITHUB_SERVER_URL:-https://github.com}" "${GITHUB_REPOSITORY:-}" "${GITHUB_RUN_ID:-}")"
+            git -C "$root" -c commit.gpgsign=false \
+              -c user.name="$KIT_COMMITTER_NAME" -c user.email="$KIT_COMMITTER_EMAIL" \
+              commit --quiet --author="$KIT_AUTHOR" -m "$subject" -m "$body"
+            sha="$(git -C "$root" rev-parse HEAD)"
+            git -C "$root" push --quiet origin "HEAD:refs/heads/$branch"
+            echo "Committed and pushed $sha to $branch, authored by ${KIT_AUTHOR%% <*}."
+          fi
+        fi
+        echo "commit=$sha" >> "$GITHUB_OUTPUT"
