@@ -55,6 +55,15 @@ Both are **stdlib-only Python**. PyYAML is used when it happens to be
 installed and a built-in reader substitutes when it is not, so this runs on a
 bare `python3` with nothing to install and nothing to cache.
 
+**Called, never copied.** Your repository holds a data file and a stub that
+pins `uses: tannergolden/emblems@v1`. The drawing happens here, so a fix to a
+glyph or a color lands once and reaches every badge pinned to `v1`. That is
+how [`tannergolden/standards`](https://github.com/tannergolden/standards)
+delivers automation and how
+[`tannergolden/trophies`](https://github.com/tannergolden/trophies) draws a
+profile's trophies; this is the badge half of the pair, in the same palette,
+under the same rule.
+
 ---
 
 ## 🟢 Up 24/7/365
@@ -385,6 +394,27 @@ the renderer uses, and a test fails if this README disagrees with it.
 
 ---
 
+## 🔁 How It Runs
+
+**Every render is deterministic and prunes.** The same data file produces
+byte-identical SVGs, so re-running makes no spurious diff, and a file that no
+entry names anymore is deleted, so the output folder always mirrors the data.
+
+**Every SVG carries a kit version stamp.** `--check` hard-fails only
+same-version drift and treats a version difference as "regenerate next time",
+so upgrading the kit can never wedge a consumer's CI. The self-test pins one
+canonical render to a golden hash, so rendered output cannot change unless
+someone bumps the version knowingly.
+
+**Every commit is a Conventional Commit.** With `commit: true` the run
+commits what it drew as `chore(badges): 🏷️ re-render badges`, authored by the
+kit's author and committed by `github-actions[bot]`, with a body recording
+the mode, the data file and a link to the run, per the
+[commit standard](https://github.com/tannergolden/standards/blob/Development/docs/distribution/Conventional-Commits.md).
+Only what the run changed is staged.
+
+---
+
 ## 🧭 Layout
 
 ```bash
@@ -418,15 +448,17 @@ make check       # CI gate: self-test, drift check, no hotlink remains
 make self-test   # renderer and parser invariants, no repository needed
 ```
 
-Rendering **prunes**: an SVG that no entry names anymore is deleted, so the
-output folder always mirrors the data file. Output is deterministic, so
-re-running produces no spurious diff.
+### Releasing
 
-Every SVG carries a kit version stamp. `--check` hard-fails only same-version
-drift and treats a version difference as "regenerate next time", so upgrading
-the kit can never wedge a consumer's CI. The self-test pins one canonical
-render to a golden hash, so rendered output cannot change unless someone bumps
-the version knowingly.
+Every stub pins `@v1`, a moving major tag. A version is cut by dispatching
+**🏷️ Cut Release** with `vX.Y.Z`: the stub calls the standards' release
+workflow, which refuses a commit that is not on the default branch or a
+version that does not move forward, proves the action and the kit exist at
+the commit and that the self-test passes, then tags the immutable version,
+force-moves `v1`, publishes the release with generated notes and prunes the
+pages it superseded. Version tags are never deleted, so a full-version pin
+keeps resolving. A release that changes what a badge looks like for the same
+data bumps the kit version, and every consumer redraws on its next run.
 
 Full specification: [`docs/Badge-Kit.md`](docs/Badge-Kit.md).
 
@@ -446,11 +478,15 @@ and it travels in the file's own SPDX headers.
 ## 🔗 See also
 
 > [!TIP]
-> The full specification is [`docs/Badge-Kit.md`](docs/Badge-Kit.md). The
+> The full specification is [`docs/Badge-Kit.md`](docs/Badge-Kit.md).
+> [`tannergolden/trophies`](https://github.com/tannergolden/trophies) is the
+> other half of the pair: it draws a profile's or a repository's trophies the
+> way this draws badges, in the same palette, under the same rule. The
 > engineering standards this repository follows are published in
-> [tannergolden/standards](https://github.com/tannergolden/standards). If you
-> rename or move a file, update every reference to it across the repository to
-> prevent link drift.
+> [`tannergolden/standards`](https://github.com/tannergolden/standards), and
+> [`tannergolden/path`](https://github.com/tannergolden/path) is the template
+> a new repository starts from. If you rename or move a file, update every
+> reference to it across the repository to prevent link drift.
 
 ---
 
@@ -459,5 +495,9 @@ and it travels in the file's own SPDX headers.
 **Self-drawn. Self-hosted. Never rate-limited.**
 
 [↑ Back to Top](#top)
+
+<br />
+
+Built with ❤️ by [@tannergolden](https://github.com/tannergolden). Distributed under the MIT License.
 
 </div>
