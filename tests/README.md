@@ -1,6 +1,6 @@
-# 🧪 Tests - your suites start here
+# 🧪 Tests - the kit's suites
 
-This scaffold ships empty on purpose - wire your framework of choice into the `test-command` that `.github/workflows/checks.yml` runs:
+The kit's behavioural tests live in `unit/`: `test_badge_kit.py` for the renderer and `test_localize_badges.py` for the codemod, each loading its program straight from `../../src/`. `make test` is what CI runs as the `test-command` in `.github/workflows/checks.yml`: the renderer's self-test, the committed-SVG drift check, the hotlink gate, these suites, and then the repository script tests under `.github/scripts/`. Everything is stdlib `unittest`, discovered by filename, so a new `test_*.py` beside the existing ones runs without being named anywhere.
 
 | Folder         | Put (and look for)                                                           |
 | :------------- | :--------------------------------------------------------------------------- |

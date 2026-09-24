@@ -1,0 +1,141 @@
+# SPDX-FileCopyrightText: 2026 Tanner Golden
+# SPDX-License-Identifier: MIT
+#
+# The action metadata lives at the repository ROOT because GitHub Marketplace
+# requires it there, and because `uses: tannergolden/emblems@v1` is the
+# shortest thing a consumer has to type.
+name: 'Emblems Badge Kit'
+description: >-
+  Render committed SVG badges from a data file and localize shields.io
+  hotlinks in Markdown. Stdlib Python only, no third-party badge service.
+author: 'Tanner Golden'
+branding:
+  icon: 'award'
+  color: 'yellow'
+
+inputs:
+  mode:
+    description: >-
+      render   - render badges.yml into committed SVGs (default)
+      check    - verify committed SVGs are current and no shields.io hotlink
+                 remains, write nothing
+      localize - rewrite shields.io hotlinks in Markdown into committed SVGs
+      all      - localize, then render
+      snippets - print a ready-to-paste Markdown embed line per badge to the
+                 log and the job summary, write nothing
+    required: false
+    default: 'render'
+  data:
+    description: 'Badge data file, relative to the repository root.'
+    required: false
+    default: '.github/badges.yml'
+  out:
+    description: 'Output directory for committed SVGs, relative to the repository root.'
+    required: false
+    default: 'assets/badges'
+  set:
+    description: >-
+      Newline-separated NAME=MESSAGE[:COLOR] updates applied to the data file
+      before rendering, e.g. "build=Passing:green". Ignored in check mode.
+    required: false
+    default: ''
+  randomize-seed:
+    description: >-
+      Recolor decorative static badges from the non-status palette, keyed by
+      this seed. Pass an ISO week ($(date -u +%GW%V)) to rotate weekly.
+      Empty means no rotation.
+    required: false
+    default: ''
+
+outputs:
+  changed:
+    description: "'true' when the run modified any tracked file."
+    value: ${{ steps.run.outputs.changed }}
+
+runs:
+  using: 'composite'
+  steps:
+    # No setup-python step on purpose: the kit is stdlib-only (PyYAML is used
+    # when present and a built-in reader substitutes when it is not), and
+    # every GitHub-hosted runner ships python3. Nothing to install, nothing
+    # to cache, nothing to rate-limit.
+    - id: run
+      shell: bash
+      # Inputs travel through env, never interpolated into the script body -
+      # a ${{ }} expansion inside `run:` is a shell-injection sink.
+      env:
+        KIT_MODE: ${{ inputs.mode }}
+        KIT_DATA: ${{ inputs.data }}
+        KIT_OUT: ${{ inputs.out }}
+        KIT_SET: ${{ inputs.set }}
+        KIT_SEED: ${{ inputs.randomize-seed }}
+        KIT_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        case "$KIT_MODE" in
+          render|check|localize|all|snippets) ;;
+          *) echo "::error::unknown mode '$KIT_MODE' (render|check|localize|all|snippets)"; exit 1 ;;
+        esac
+
+        # Every hosted runner ships an interpreter, but not under one name:
+        # python3 on Linux and macOS, plain python in Git Bash on Windows.
+        PY="$(command -v python3 || command -v python || true)"
+        if [ -z "$PY" ]; then
+          echo "::error::no python3 or python on PATH"; exit 1
+        fi
+
+        root="$GITHUB_WORKSPACE"
+        data="$root/$KIT_DATA"
+        out="$root/$KIT_OUT"
+        # --untracked-files=all: the default collapses a new directory to one
+        # "?? dir/" line, so a second badge rendered into it would read as
+        # "nothing changed".
+        before="$(git -C "$root" status --porcelain --untracked-files=all 2>/dev/null || true)"
+
+        # The codemod goes first: in localize/all it may create badges the
+        # renderer then reserves, and in check mode it is the hotlink gate.
+        # It receives the same tree as the renderer, so a custom data/out
+        # is honoured on both sides.
+        case "$KIT_MODE" in
+          localize|all|check)
+            loc=( --root "$root" --data "$data" --out "$out" )
+            if [ "$KIT_MODE" = "check" ]; then loc+=( --check ); fi
+            "$PY" "$KIT_PATH/src/localize-badges.py" "${loc[@]}"
+            ;;
+        esac
+
+        if [ "$KIT_MODE" != "localize" ]; then
+          args=( --root "$root" --data "$data" --out "$out" )
+          case "$KIT_MODE" in
+            check)    args+=( --check ) ;;
+            snippets) args+=( --markdown ) ;;
+            *)
+              while IFS= read -r line; do
+                if [ -n "$line" ]; then args+=( --set "$line" ); fi
+              done <<< "$KIT_SET"
+              if [ -n "$KIT_SEED" ]; then args+=( --randomize-static "$KIT_SEED" ); fi
+              ;;
+          esac
+          if [ "$KIT_MODE" = "snippets" ]; then
+            snippets="$("$PY" "$KIT_PATH/src/badge-kit.py" "${args[@]}")"
+            printf '%s\n' "$snippets"
+            if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+              {
+                echo "### Badge embed snippets"
+                echo
+                echo '```markdown'
+                printf '%s\n' "$snippets"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            "$PY" "$KIT_PATH/src/badge-kit.py" "${args[@]}"
+          fi
+        fi
+
+        after="$(git -C "$root" status --porcelain --untracked-files=all 2>/dev/null || true)"
+        if [ "$before" != "$after" ]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi

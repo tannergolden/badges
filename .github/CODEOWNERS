@@ -1,45 +1,34 @@
 # =============================================================================
-# CODEOWNERS - Folder-based ownership rules
+# CODEOWNERS - review ownership
 #
-# This is a TEMPLATE. No owners are assigned by default, so a fresh repository
-# never ships with invalid CODEOWNERS entries (a rule with no valid owner is a
-# GitHub error and cannot satisfy "Require review from Code Owners").
+# NEVER INHERITED. GitHub reads this only from the repository that owns it, so
+# unlike the community health files it cannot come from the account's .github
+# repository and has to live here.
 #
-# To enable code-owner review:
-#   1. Uncomment the rule(s) you want below.
-#   2. Replace @your-org/your-team with a real @user or @org/team that has
-#      write access to this repository.
-#   3. (Optional) Enable: Settings → Branches → Branch protection →
-#      "Require review from Code Owners".
+# ONE OWNER, SO ONE RULE. This repository is single-maintainer, so the owner is
+# known rather than guessed at, and a rule naming an owner without write
+# access is a GitHub error rather than a warning - which is why the template
+# this was generated from ships every rule commented out.
 #
-# PRECEDENCE: the LAST matching rule wins. Put broad defaults first, then more
-# specific overrides below.
+# Additional path rules would all name the same person, which adds lines
+# without adding information. Add them when a second maintainer exists, or
+# when a specific directory should route somewhere else.
+#
+# ⚠️ THIS DOES NOT BLOCK YOUR OWN PULL REQUESTS. The shipped rulesets require
+# zero approvals and do not require code-owner review, so a solo maintainer
+# cannot deadlock on being unable to approve their own work. What this does
+# give you is an automatic review request on anything opened by somebody else:
+# Dependabot, or an agent acting on your behalf.
+#
+# PRECEDENCE: the LAST matching rule wins. Broad defaults first, specific
+# overrides below.
 # =============================================================================
 
-
-# ---------------------------------------------------------------------------
-# 0) GLOBAL DEFAULT - fallback owner for any unmatched file.
-# ---------------------------------------------------------------------------
-# *                                    @your-org/your-team
+# Everything, unless a later rule says otherwise.
+*                           @tannergolden
 
 
-# ---------------------------------------------------------------------------
-# 1) REPOSITORY GOVERNANCE & AUTOMATION
-# ---------------------------------------------------------------------------
-# /.github/                            @your-org/your-team
-# /.github/workflows/                  @your-org/your-team
-# /assets/                             @your-org/your-team
-# /.devcontainer/                      @your-org/your-team
-
-
-# ---------------------------------------------------------------------------
-# 2) APPLICATION SOURCE & TESTS
-# ---------------------------------------------------------------------------
-# /src/                                @your-org/your-team
-# /tests/                              @your-org/your-team
-
-
-# ---------------------------------------------------------------------------
-# 3) DOCUMENTATION
-# ---------------------------------------------------------------------------
-# /docs/                               @your-org/your-team
+# --- Add path-specific owners here as the repository grows -------------------
+#
+# /src/                     @tannergolden
+# /.github/workflows/       @some-other-user

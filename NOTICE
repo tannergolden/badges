@@ -1,0 +1,20 @@
+Emblems (the Badge Kit)
+Copyright (c) 2026 Tanner Golden
+
+This product is licensed under the MIT License. See LICENSE.
+
+-------------------------------------------------------------------------------
+THIRD-PARTY MATERIAL
+-------------------------------------------------------------------------------
+
+Character advance-width tables in src/badge-kit.py (the Verdana metrics used to
+size a badge) are derived from the anafanafo dataset:
+
+    anafanafo
+    Copyright (c) 2018 Metabolize LLC
+    https://github.com/metabolize/anafanafo
+    Licensed under the MIT License.
+
+The MIT License text in LICENSE applies to that material on the same terms.
+The notice also travels in the SPDX headers of src/badge-kit.py, so it is
+retained by anyone who copies the file alone.

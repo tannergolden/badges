@@ -1,0 +1,236 @@
+# The badges THIS repository renders for itself - the kit eating its own
+# cooking. Edit this file, then run `make badges`.
+#
+# Each entry:
+#   name           basename (kebab-case, unique); renders to static/<name>.svg,
+#                  or dynamic/<name>.svg for a gold (health) label
+#   label          left segment text  (uppercased by for-the-badge)
+#   message        right segment text (uppercased by for-the-badge)
+#   label_color    palette token or '#RRGGBB' - static: black, dynamic-health: gold
+#   message_color  palette token or '#RRGGBB' - carries the semantic meaning
+#   icon           a key from the icon registry (optional; omit for no icon)
+#   style          for-the-badge (default) | flat | flat-square
+#   link           where the badge points when embedded (reference only)
+#
+# Quote raw hex colors ('#2EA043') - unquoted, YAML reads # as a comment.
+# List the palette tokens and the full icon registry from the generator
+# (a hand-copied list here would only go stale):
+#   python3 src/badge-kit.py --palette
+#   python3 src/badge-kit.py --icons
+
+badges:
+  # --- Identity: black label -------------------------------------------------
+  - name: status
+    label: Status
+    message: Active
+    label_color: black
+    message_color: green
+    icon: pulse
+    link: ./
+  - name: role
+    label: Role
+    message: Tool
+    label_color: black
+    message_color: pink
+    icon: book
+    link: ./
+  - name: context
+    label: Context
+    message: Badges
+    label_color: black
+    message_color: purple
+    icon: layers
+    link: ./
+  - name: license
+    label: License
+    message: MIT
+    label_color: black
+    message_color: yellow
+    icon: scale
+    link: ./LICENSE
+
+  # --- Dynamic health: gold label --------------------------------------------
+  # Message color is restricted to the traffic-light triad (plus slate for
+  # "no status yet") - validation rejects any other hue on a gold label.
+  - name: build
+    label: Build Status
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: check
+    link: ./actions
+  - name: last-commit
+    label: Last Commit
+    message: Today
+    label_color: gold
+    message_color: green
+    icon: commit
+    link: ./commits
+
+  # --- What the kit is -------------------------------------------------------
+  - name: dependencies
+    label: Dependencies
+    message: None
+    label_color: black
+    message_color: teal
+    icon: package
+    link: ./
+  - name: palette
+    label: Palette
+    message: 64 Tokens
+    label_color: black
+    message_color: fuchsia
+    icon: sparkle
+    link: ./
+  - name: icons
+    label: Icons
+    message: 64 Glyphs
+    label_color: black
+    message_color: indigo
+    icon: star
+    link: ./
+  - name: use-action
+    label: Use This Action
+    message: Start
+    label_color: black
+    message_color: azure
+    icon: rocket
+    link: ./
+
+  # ===========================================================================
+  # README showcase
+  # ---------------------------------------------------------------------------
+  # The badges the README renders to demonstrate the kit: the three styles, the
+  # traffic-light health rule, a spread of the palette, and a sample of the icon
+  # registry. They live here rather than in a second data file because a folder
+  # is pruned to mirror exactly one file - two files rendering into
+  # assets/badges/ would delete each other's output on every run.
+  #
+  # They are routed by the same rule as everything else: a gold label lands in
+  # dynamic/, every other label in static/.
+  # ===========================================================================
+  # --- The traffic-light rule, on the gold health label -----------------------
+  - name: health-passing
+    label: Build
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: check
+  - name: health-degraded
+    label: Coverage
+    message: 78%
+    label_color: gold
+    message_color: yellow
+    icon: chart
+  - name: health-failing
+    label: Deploy
+    message: Failing
+    label_color: gold
+    message_color: red
+    icon: cross
+  - name: health-unknown
+    label: Scan
+    message: No Data
+    label_color: gold
+    message_color: slate
+    icon: question
+
+  # --- A spread of the palette, on static badges ------------------------------
+  - name: hue-crimson
+    label: Release
+    message: v2.4.0
+    label_color: black
+    message_color: crimson
+    icon: tag
+  - name: hue-emerald
+    label: Tests
+    message: 1,204 Passing
+    label_color: black
+    message_color: emerald
+    icon: flask
+  - name: hue-azure
+    label: Docs
+    message: Live
+    label_color: black
+    message_color: azure
+    icon: book
+  - name: hue-fuchsia
+    label: Design
+    message: System
+    label_color: black
+    message_color: fuchsia
+    icon: sparkle
+  - name: hue-amber
+    label: Bundle
+    message: 42 kB
+    label_color: black
+    message_color: amber
+    icon: package
+  - name: hue-teal
+    label: Latency
+    message: 38 ms
+    label_color: black
+    message_color: teal
+    icon: bolt
+  - name: hue-plum
+    label: Runtime
+    message: Python 3.12
+    label_color: black
+    message_color: plum
+    icon: terminal
+  - name: hue-coral
+    label: Issues
+    message: 3 Open
+    label_color: black
+    message_color: coral
+    icon: bug
+  - name: hue-forest
+    label: Uptime
+    message: 99.98%
+    label_color: black
+    message_color: forest
+    icon: pulse
+  - name: hue-steel
+    label: Platform
+    message: Linux
+    label_color: black
+    message_color: steel
+    icon: server
+
+  # --- A sample of the icon registry ------------------------------------------
+  - name: icon-lock
+    label: Security
+    message: Hardened
+    label_color: black
+    message_color: maroon
+    icon: lock
+  - name: icon-users
+    label: Community
+    message: Welcome
+    label_color: black
+    message_color: rose
+    icon: users
+  - name: icon-rocket
+    label: Deploy
+    message: Automated
+    label_color: black
+    message_color: lime
+    icon: rocket
+  - name: icon-database
+    label: Storage
+    message: Postgres
+    label_color: black
+    message_color: navy
+    icon: database
+  - name: icon-globe
+    label: CDN
+    message: Global
+    label_color: black
+    message_color: sky
+    icon: globe
+  - name: icon-trophy
+    label: Rank
+    message: Top 10
+    label_color: black
+    message_color: tan
+    icon: trophy
