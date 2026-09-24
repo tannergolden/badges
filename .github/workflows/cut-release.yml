@@ -2,32 +2,21 @@
 #
 # 🏷️ Cut Release
 #
-# Purpose: publishes a version of the Badge Kit and moves the major tag that
-# consumers pin.
+# Publishes a version of the badge kit and moves the major tag every consumer
+# pins. The work happens in tannergolden/standards' release.yml, called
+# rather than copied, so the guards live in one place: it refuses a commit
+# that is not on the default branch and a version that does not move
+# forward, proves the files below exist at the commit and that the check
+# passes, then tags the immutable vX.Y.Z, force-moves vX, publishes the
+# release with generated notes and prunes the pages it superseded.
 #
-# ⚠️ THIS IS THE MOST CONSEQUENTIAL WORKFLOW HERE. Moving `v1` changes what
-# every repository with `uses: tannergolden/emblems@v1` executes, on their
-# next run, without anyone on their side doing anything. Treat a release as a
+# ⚠️ Moving `v1` changes what every repository pinned to it runs next,
+# without anyone on their side doing anything. Treat a release as a
 # production change to every consumer at once.
 #
-# TWO TAGS, TWO CONTRACTS:
-#   vX.Y.Z  immutable. Cut once, never moved. For anyone who wants exactness.
-#   vX      moving. Re-pointed at each release in that major line. The normal
-#           pin, the one the README documents, and the reason a fix reaches
-#           everyone without them editing a workflow.
-#
-# A change that removes an action input, renames a mode, or alters what a
-# rendered SVG looks like for unchanged input is BREAKING, and belongs in a
-# new major line rather than a move of the current one. The renderer guards
-# the last of those itself: KIT_VERSION and GOLDEN_SHA in src/badge-kit.py
-# cannot change without someone doing it deliberately.
-#
-# This is deliberately NOT the release.yml stub. That one calls the shared
-# publisher, which computes a version with git-cliff and never creates a
-# moving major tag, so it cannot produce the `v1` this repository's own
-# README depends on.
-#
-# ---
+# This is deliberately NOT the release.yml stub beside it: that one calls
+# the shared publisher, which computes an information-rich tag and never
+# writes a moving major, so it cannot produce the `v1` a stub resolves.
 
 name: '🏷️ Cut Release'
 
@@ -54,144 +43,11 @@ jobs:
   release:
     name: '🏷️ Publish Version & Move Major Tag'
     if: ${{ !github.event.repository.is_template }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
     permissions:
-      contents: write # create tags and publish the release
-    steps:
-      - name: '🛡️ Harden Runner'
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
-        with:
-          egress-policy: audit
-
-      - name: '📂 Checkout'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: '🔍 Validate Version'
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ inputs.version }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          set -euo pipefail
-          if ! printf '%s' "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error title=Release::'$VERSION' is not a vX.Y.Z version."
-            exit 1
-          fi
-          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
-            echo "::error title=Release::Tag '$VERSION' already exists. A published version is immutable; cut a new patch instead."
-            exit 1
-          fi
-
-          # ⚠️ THE DISPATCH REF IS NOT TRUSTED. `workflow_dispatch` carries no
-          # branch restriction, so the ref selector on the form can name any
-          # branch, and the checkout above takes it. Without this, anyone with
-          # write access could publish from an unmerged branch and force-move
-          # `v1` onto its HEAD, which every consumer would then execute.
-          #
-          # Tested by ANCESTRY rather than branch name: what has to be true is
-          # that this commit is already on the default branch.
-          BASE="refs/remotes/origin/${DEFAULT_BRANCH}"
-          if ! git rev-parse -q --verify "$BASE" >/dev/null; then
-            echo "::error title=Release::Could not resolve '${BASE}'. The checkout needs fetch-depth: 0. Refusing to publish rather than guessing."
-            exit 1
-          fi
-          if ! git merge-base --is-ancestor HEAD "$BASE"; then
-            echo "::error title=Release::This commit is not on the default branch '${DEFAULT_BRANCH}'. A release is cut from merged code: moving the major tag onto anything else hands unreviewed code to every repository pinned to it."
-            exit 1
-          fi
-
-          # ⚠️ A RELEASE ONLY EVER MOVES FORWARD. `gh release create --latest`
-          # marks whatever it is handed as latest, and `git tag -f` moves the
-          # major pointer onto it, so publishing an older version downgrades
-          # every consumer on their next run. `sort -V` orders numerically, so
-          # v1.10.0 is correctly newer than v1.9.0.
-          if ! PUBLISHED="$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate \
-              --jq '.[] | select(.draft == false) | .tag_name' 2>&1)"; then
-            echo "::error title=Release::Could not read existing releases to check this version moves forward: ${PUBLISHED}. Refusing to publish rather than assuming."
-            exit 1
-          fi
-          LATEST="$(printf '%s\n' "$PUBLISHED" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
-          if [ -n "$LATEST" ]; then
-            NEWEST="$(printf '%s\n%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)"
-            if [ "$NEWEST" != "$VERSION" ] || [ "$VERSION" = "$LATEST" ]; then
-              echo "::error title=Release::'$VERSION' is not newer than the current release '$LATEST'. Publishing it would move the major tag backwards."
-              exit 1
-            fi
-          fi
-
-          echo "major=${VERSION%%.*}" >> "$GITHUB_OUTPUT"
-
-      # A consumer's `uses: tannergolden/emblems@vX` resolves action.yml AT
-      # THAT TAG, and its run body executes the scripts beside it. A rename
-      # that landed without updating the action would break every consumer at
-      # the moment of release. Checked here rather than discovered by them.
-      - name: '🔗 Verify The Action Resolves At This Commit'
-        run: |
-          set -euo pipefail
-          missing=0
-          for f in action.yml src/badge-kit.py src/localize-badges.py; do
-            if [ ! -f "$f" ]; then
-              echo "::error title=Release::${f} does not exist at this commit, but the action needs it."
-              missing=1
-            fi
-          done
-          [ "$missing" -eq 0 ] || exit 1
-          # The renderer a consumer will run, proving itself at the tag.
-          python3 src/badge-kit.py --self-test
-          echo "Kit version at this commit: $(python3 src/badge-kit.py --version)"
-
-      # ⚠️ THE TAGS HERE ARE LIGHTWEIGHT, DELIBERATELY. A lightweight tag is a
-      # ref and nothing else: no tag object, so nothing that can carry a
-      # signature or lack one. What GitHub displays for it is the COMMIT,
-      # which is signed and verified. An annotated tag would be a second
-      # object needing a second signature, which means a private key in
-      # repository secrets, readable by anything that runs here. The release
-      # page already records who published, when, and what changed.
-      - name: '🏷️ Tag and Publish'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ inputs.version }}
-          MAJOR: ${{ steps.check.outputs.major }}
-          MOVE_MAJOR: ${{ inputs.move-major }}
-          ACTOR: ${{ github.actor }}
-          ACTOR_ID: ${{ github.actor_id }}
-        run: |
-          set -euo pipefail
-          git config user.name "$ACTOR"
-          git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
-          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          git tag "$VERSION"
-          git push "$REMOTE" "$VERSION"
-          echo "Published immutable tag $VERSION."
-
-          if [ "$MOVE_MAJOR" = "true" ]; then
-            # Force-moved by design: this IS the moving major tag, and moving
-            # it is what makes a fix reach everyone pinned to it.
-            git tag -f "$MAJOR"
-            git push --force "$REMOTE" "$MAJOR"
-            echo "::warning title=Major tag moved::${MAJOR} now points at ${VERSION}. Every repository pinned to @${MAJOR} runs this code on its next workflow run."
-          fi
-
-          gh release create "$VERSION" \
-            --title "$VERSION" \
-            --generate-notes \
-            --latest
-
-          {
-            echo "### 🏷️ Released $VERSION"
-            echo ""
-            echo "| Tag | Meaning |"
-            echo "| :--- | :--- |"
-            echo "| \`$VERSION\` | Immutable. This exact code, forever. |"
-            if [ "$MOVE_MAJOR" = "true" ]; then
-              echo "| \`$MAJOR\` | Moving. Now points here; every consumer pinned to it runs this next. |"
-            fi
-            echo ""
-            echo "Consumers pin with \`uses: ${GITHUB_REPOSITORY}@${MAJOR}\`."
-          } >> "$GITHUB_STEP_SUMMARY"
+      contents: write # create tags, publish the release, prune superseded pages
+    uses: tannergolden/standards/.github/workflows/release.yml@v1
+    with:
+      version: ${{ inputs.version }}
+      move-major: ${{ inputs.move-major }}
+      required-files: 'action.yml src/badge-kit.py src/localize-badges.py'
+      check-command: 'python3 src/badge-kit.py --self-test'
