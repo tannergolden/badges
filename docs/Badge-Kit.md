@@ -108,7 +108,7 @@ Each entry in `.github/badges.yml` describes one badge:
 | `label_color`   |    no    | Palette token or `#RRGGBB`. Static: `black`. Dynamic-health: `gold`.        |
 | `message_color` |    no    | Palette token or `#RRGGBB`, carrying the semantic meaning.                  |
 | `icon`          |    no    | A key from the icon registry. Omit for no icon.                             |
-| `style`         |    no    | `for-the-badge` (default), `flat`, or `flat-square`.                        |
+| `style`         |    no    | One of the six styles in **Anatomy** above; `for-the-badge` is the default. |
 | `link`          |    no    | Where the badge points when embedded (reference only).                      |
 
 Every field is **validated**. An unknown icon, color token, style, duplicate

@@ -9,7 +9,7 @@
 #   label_color    palette token or '#RRGGBB' - static: black, dynamic-health: gold
 #   message_color  palette token or '#RRGGBB' - carries the semantic meaning
 #   icon           a key from the icon registry (optional; omit for no icon)
-#   style          for-the-badge (default) | flat | flat-square
+#   style          for-the-badge (default) | flat | flat-square | plastic | pill | compact
 #   link           where the badge points when embedded (reference only)
 #
 # Quote raw hex colors ('#2EA043') - unquoted, YAML reads # as a comment.

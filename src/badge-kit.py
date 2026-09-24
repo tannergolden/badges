@@ -4,36 +4,45 @@
 # SPDX-License-Identifier: MIT
 """Self-hosted badge kit - renders committed SVG badges, no third party.
 
-The template's badges are drawn here instead of hotlinked to a badge
-service, so a repository never depends on an external endpoint at render
-time and can never be rate-limited. One generator turns a small data file
+A repository's badges are drawn here instead of hotlinked to a badge
+service, so it never depends on an external endpoint at render time and
+can never be rate-limited. One generator turns a small data file
 (`.github/badges.yml`) into committed SVGs under `assets/badges/`, in the
 repository's own styles with an in-house icon set.
 
-Engine-tier: this generator and its icon set live under `.github/scripts/`
-and sync to every repository built from the template, so downstream repos
-inherit new icons, styles, and fixes. The DATA file is the repository's
-own - it lists the badges that repository wants and is never overwritten.
+The kit is a standalone repository, consumed as a composite action:
+`uses: tannergolden/emblems@v1` in a consumer's workflow runs this file
+against that consumer's checkout, so every repository pinned to the major
+tag inherits new icons, styles, and fixes the moment it moves. The DATA
+file is the consumer's own - `.github/badges.yml` in their repository lists
+the badges they want and is never overwritten.
 
-Design contract (matches docs/technical/interface/Document-Styling-&-Formatting.md):
-  - Three interchangeable styles: `for-the-badge` (the default; bold
-    uppercase, 28px), `flat` (20px, rounded, subtle gradient), and
-    `flat-square`. Documentation headers keep `for-the-badge` per the law.
+Design contract (matches the Document Styling & Formatting standard in
+tannergolden/standards, docs/technical/interface/Document-Styling-&-Formatting.md):
+  - Six interchangeable styles, grouped by the job. Headline: `for-the-badge`
+    (the default; bold uppercase, 28px). Standard: `flat` (20px, rounded,
+    subtle gradient), `flat-square` (square corners, no gradient), `plastic`
+    (18px, bevelled) and `pill` (20px, fully round). Dense: `compact` (16px).
+    Documentation headers keep `for-the-badge` per the standard.
   - Static badges use a black label; dynamic-health badges use the metallic
     gold label. Message color carries the semantic meaning.
   - Badges are solid chips, so they render identically in light and dark
-    themes (unlike the transparent analytics cards, which adapt).
+    themes.
   - Text is measured with real Verdana metrics and pinned with SVG
     `textLength`, so a badge renders at the same width on every platform.
 
 Usage:
-  python3 .github/scripts/badge-kit.py                  # render .github/badges.yml
-  python3 .github/scripts/badge-kit.py --check          # verify committed SVGs are current
-  python3 .github/scripts/badge-kit.py --set build=Passing:green   # update a value, re-render
-  python3 .github/scripts/badge-kit.py --icons          # list the icon registry
-  python3 .github/scripts/badge-kit.py --palette        # list the palette tokens
-  python3 .github/scripts/badge-kit.py --self-test      # renderer + parser invariants
-Run via `make badges`; `make lint-docs` runs --self-test and --check.
+  python3 src/badge-kit.py                   # render .github/badges.yml     (make render)
+  python3 src/badge-kit.py --check           # committed SVGs are current    (make check)
+  python3 src/badge-kit.py --set build=Passing:green   # update a value, re-render
+  python3 src/badge-kit.py --gallery         # draw every icon, token, style (make gallery)
+  python3 src/badge-kit.py --icons           # list the icon registry        (make icons)
+  python3 src/badge-kit.py --palette         # list the palette tokens       (make palette)
+  python3 src/badge-kit.py --self-test       # renderer + parser invariants  (make self-test)
+`make badges` localizes any hotlinks, renders, and refreshes the gallery.
+The gate is `make check`: self-test, committed-SVG drift, gallery drift, and
+no shields.io hotlink left. `make test` runs that plus the unit tests under
+tests/unit/.
 """
 from __future__ import annotations
 
