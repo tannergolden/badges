@@ -57,6 +57,31 @@ bare `python3` with nothing to install and nothing to cache.
 
 ---
 
+## 🟢 Up 24/7/365
+
+Most badge services are a **live request on every page view**. Your README
+renders only while their servers answer, so their outages, slow days and rate
+limits land on your page as broken images, and nothing on your side can fix
+it. It is a dependency you cannot see until the moment it fails.
+
+A badge here has **no server to be down**. It is a committed SVG, served by
+GitHub with the rest of your repository, so it is up exactly as long as your
+repository is: every hour of every day, all year round, with no third party
+in the path. There is no endpoint to fail, no quota to exhaust and no status
+page to check. If someone can see your README, they can see your badges. That
+is not an uptime promise to take on trust; it is a property of a committed
+file.
+
+|                  | Hosted badge service                    | Badges drawn here                    |
+| :--------------- | :-------------------------------------- | :----------------------------------- |
+| **A badge is**   | An HTTP response, answered at view time | A file in your repository            |
+| **Down when**    | Their service is                        | Never on its own, only with the page |
+| **Slow when**    | Their service is busy                   | Never, it is a static file           |
+| **Rate limits**  | Yes, and not yours to raise             | None                                 |
+| **Changes when** | Their side deploys                      | You commit                           |
+
+---
+
 ## 🖼️ What It Looks Like
 
 Six lines of YAML in, one committed SVG out:
