@@ -653,7 +653,7 @@ class BlueprintCli(unittest.TestCase):
         self.assertIn('aria-label="Build: Failing"', svg)
         self.assertIn(bk.PALETTE["cherry"], svg, "red is drawn in the redprint")
 
-    def test_the_codemod_counts_a_night_file_as_this_repositorys_own(self):
+    def test_the_codemod_counts_a_night_file_as_its_own(self):
         lb = load("localize_badges_plates", "localize-badges.py")
         lb.configure(self.root, self.data, self.out)
         own = lb.own_badge_files()
