@@ -76,14 +76,13 @@ jobs:
       #   test-command: 'go test ./...'
       #   build-command: 'go build ./...'
       lint-command: 'python3 .github/scripts/validate-repository.py'
-      # The scripts under .github/scripts/ are the only gates a fresh
-      # repository has, so they are the code here that must not regress
-      # silently. Their tests ship beside them and run on every push - a suite
-      # nothing executes is not a regression net, it only looks like one.
-      #
-      # Discovery rather than a list: a `test_*.py` added next to a new script
-      # is picked up without anyone remembering to name it here.
-      test-command: "python3 -m unittest discover -s .github/scripts -p 'test_*.py'"
+      # `make test` is the whole gate: the kit's self-test, committed-SVG
+      # drift, no shields.io hotlink left in the tree, the kit's own suites
+      # under tests/unit/, and then the repository script tests under
+      # .github/scripts/ that ship with the scaffold. Both suites are found by
+      # discovery rather than a list: a `test_*.py` added beside a script or a
+      # test is picked up without anyone remembering to name it here.
+      test-command: 'make test'
 
   # RULESET-LOAD-BEARING JOB ID: reports as 'secrets / 🔍 Scan for Secrets'.
   secrets:

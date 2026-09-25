@@ -27,18 +27,20 @@ _Empty on purpose. Yours to fill._
 | `branding/` | Logos, icons, colour palettes, typography specimens             |
 | `images/`   | General project imagery, screenshots, product shots             |
 | `docs/`     | Diagrams and figures embedded in documents under `docs/`        |
-| `badges/`   | Badge artwork and the definitions a generator reads             |
+| `badges/`   | The SVGs the badge kit renders from `.github/badges.yml`        |
 
-`badges/` has two homes of its own: `static/` for badges committed as finished
-SVGs and served straight from the repository, and `dynamic/` for the
-definitions a generator reads to produce a badge when it runs. Both are empty
-until that generator lands.
+`badges/` has two homes of its own, and nothing but a badge's label color
+decides which one it lands in: `static/` holds every fixed-value badge (black
+label), and `dynamic/` holds the health badges whose value changes over time
+(gold label). Both are **generated**: `make badges` renders them, `make check`
+fails CI when they drift from the data file, and rendering prunes any SVG no
+entry names anymore. Edit the data file, never the SVGs. The `gallery-*.svg`
+files are drawn from the kit's registries the same way, for
+[the gallery](../docs/Gallery.md).
 
-The first three folders are what every project needs, and `badges/` is the one
-here that precedes its contents on purpose, because its shape is already
-decided. Add your own - `mockups/`, `diagrams/`, `video/` - as soon as you have
-something to put in them. An empty folder invented ahead of a need is a folder
-nobody uses.
+The first three folders are what every project needs. Add your own -
+`mockups/`, `diagrams/`, `video/` - as soon as you have something to put in
+them. An empty folder invented ahead of a need is a folder nobody uses.
 
 ---
 

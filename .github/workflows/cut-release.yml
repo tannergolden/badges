@@ -1,0 +1,53 @@
+# --- This Repository's Own Release ---
+#
+# 🏷️ Cut Release
+#
+# Publishes a version of the badge kit and moves the major tag every consumer
+# pins. The work happens in tannergolden/standards' release.yml, called
+# rather than copied, so the guards live in one place: it refuses a commit
+# that is not on the default branch and a version that does not move
+# forward, proves the files below exist at the commit and that the check
+# passes, then tags the immutable vX.Y.Z, force-moves vX, publishes the
+# release with generated notes and prunes the pages it superseded.
+#
+# ⚠️ Moving `v1` changes what every repository pinned to it runs next,
+# without anyone on their side doing anything. Treat a release as a
+# production change to every consumer at once.
+#
+# This is deliberately NOT the release.yml stub beside it: that one calls
+# the shared publisher, which computes an information-rich tag and never
+# writes a moving major, so it cannot produce the `v1` a stub resolves.
+
+name: '🏷️ Cut Release'
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, as vX.Y.Z'
+        required: true
+        type: string
+      move-major:
+        description: 'Also move the major tag (vX) to this release'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  release:
+    name: '🏷️ Publish Version & Move Major Tag'
+    if: ${{ !github.event.repository.is_template }}
+    permissions:
+      contents: write # create tags, publish the release, prune superseded pages
+    uses: tannergolden/standards/.github/workflows/release.yml@v1
+    with:
+      version: ${{ inputs.version }}
+      move-major: ${{ inputs.move-major }}
+      required-files: 'action.yml src/badge-kit.py src/localize-badges.py'
+      check-command: 'python3 src/badge-kit.py --self-test'

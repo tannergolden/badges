@@ -1,20 +1,34 @@
 <!--
-title: '🛤️ GOLDEN PATH'
-description: 'A language-agnostic scaffold. Structure, community health files, and workflow triggers, with every standard followed by link rather than copied.'
-tags: [template, scaffold, ci-cd, engineering-standards]
+title: '🏷️ BADGE GENERATOR'
+description: 'Badges a repository draws for itself, rendered as committed SVGs from one data file so no README depends on a third-party service.'
+tags: [badges, svg, markdown, github-actions]
 category: docs
 -->
 
+<!-- markdownlint-disable MD041 -->
 
 <div align="center">
 
-# 🛤️ GOLDEN PATH
+# 🏷️ BADGE GENERATOR
 
 <a name="top"></a>
 
-**The paved road to a new repository.**
+**Badges a repository draws for itself.**
 
-_Scaffold here. Standards by link. No engine._
+_Drawn, never fetched._
+
+[![Status: Active](assets/badges/static/status.svg)](./)
+[![Role: Tool](assets/badges/static/role.svg)](./)
+[![Context: Badges](assets/badges/static/context.svg)](./)
+[![License: MIT](assets/badges/static/license.svg)](./LICENSE)
+
+[![Build status of the main CI pipeline](assets/badges/dynamic/build.svg)](./actions)
+[![Time since the last commit](assets/badges/dynamic/last-commit.svg)](./commits)
+
+[![Dependencies: None](assets/badges/static/dependencies.svg)](./)
+[![Palette: 64 tokens](assets/badges/static/palette.svg)](./)
+[![Icons: 64 glyphs](assets/badges/static/icons.svg)](./)
+[![Use this action](assets/badges/static/use-action.svg)](#-use-it-in-your-own-repository)
 
 </div>
 
@@ -22,403 +36,568 @@ _Scaffold here. Standards by link. No engine._
 
 ## 💡 What This Is
 
-A **golden path**: the paved, supported route to a new repository. It is a
-**boilerplate** - a working starting shape, already decided - not an empty
-directory with instructions.
+A badge served from `img.shields.io` is a third-party request on every page
+view, and a dependency on somebody else's uptime for your README to render.
+This draws them instead.
 
-That distinction is the whole design. Two things have to be true before a
-repository is any good: it has to follow sound engineering standards, and it has
-to have a structure. This template supplies **both**, and supplies them
-differently on purpose.
+A badge here is a **committed SVG**, rendered from a small data file you own.
+No request at render time, nothing to rate-limit, and the palette, icons and
+geometry are yours.
 
-|                   | How it arrives                                                                      | Why                                                                      |
-| :---------------- | :---------------------------------------------------------------------------------- | :----------------------------------------------------------------------- |
-| **The standards** | By link, from [`tannergolden/standards`](https://github.com/tannergolden/standards) | Shared, so a fix reaches every repository at once                        |
-| **The structure** | Copied here, as real folders and files                                              | Yours from the first commit, because only you can decide what it becomes |
+It is two programs sharing one output tree:
 
-So you get `src/`, `tests/`, `packages/`, `benchmarks/`, `assets/`, and `docs/`
-already laid out, community health files already written, and continuous
-integration already wired - and none of it is enforced. A boilerplate makes the
-common case free; it does not make the uncommon case impossible.
+| Part                     | Job                                                                 |
+| :----------------------- | :------------------------------------------------------------------ |
+| `src/badge-kit.py`       | **The renderer.** A data file becomes committed SVGs.               |
+| `src/localize-badges.py` | **The codemod.** `img.shields.io` hotlinks in Markdown become one.  |
 
-The name is the point. A golden path is not the only way to build something and
-it is not compulsory. It is the way that already has the paving stones laid, so
-taking it costs less than not taking it. Every file here is yours to change the
-moment you have a reason to.
+Both are **stdlib-only Python**. PyYAML is used when it happens to be
+installed and a built-in reader substitutes when it is not, so this runs on a
+bare `python3` with nothing to install and nothing to cache.
 
-What it deliberately does **not** decide is the language: no build system, no
-package manager, no toolchain. A structure is universal; a build is not.
-
-There is also **no sync engine**. Nothing here phones home, nothing overwrites
-your files later, and editing anything after generating has no upstream
-consequence. The standards stay current because they are linked, not because
-something reaches in and rewrites your tree.
+**Called, never copied.** Your repository holds a data file and a stub that
+pins `uses: tannergolden/emblems@v1`. The drawing happens here, so a fix to a
+glyph or a color lands once and reaches every badge pinned to `v1`. That is
+how [`tannergolden/standards`](https://github.com/tannergolden/standards)
+delivers automation and how
+[`tannergolden/trophies`](https://github.com/tannergolden/trophies) draws a
+profile's trophies; this is the badge half of the pair, in the same palette,
+under the same rule.
 
 ---
 
-## 🔀 Fork, Or "Use This Template"
+## 🟢 Up 24/7/365
 
-Both buttons hand you every file in this repository. They differ in exactly one
-thing: whether your copy keeps a **link back to this one**.
+Most badge services are a **live request on every page view**. Your README
+renders only while their servers answer, so their outages, slow days and rate
+limits land on your page as broken images, and nothing on your side can fix
+it. It is a dependency you cannot see until the moment it fails.
 
-**Fork it** when you want to pull later changes to the scaffold back down. A
-fork remembers where it came from, so `Sync fork` and `git pull upstream` both
-work.
+A badge here has **no server to be down**. It is a committed SVG, served by
+GitHub with the rest of your repository, so it is up exactly as long as your
+repository is: every hour of every day, all year round, with no third party
+in the path. There is no endpoint to fail, no quota to exhaust and no status
+page to check. If someone can see your README, they can see your badges. That
+is not an uptime promise to take on trust; it is a property of a committed
+file.
 
-**Click "Use this template"** when you want the current version as a starting
-point and nothing more. You get a clean repository with a single
-`Initial commit`, no parent, and no sync button. It is the route this template
-is built for, and the one **🚀 The First Five Minutes** assumes further down.
-
-|                              | Fork                                              | "Use this template"  |
-| :--------------------------- | :------------------------------------------------ | :------------------- |
-| **Link back to here**        | Kept - `Sync fork` works                          | None                 |
-| **History**                  | Every commit this repository has                  | One `Initial commit` |
-| **Actions**                  | **Disabled until you enable them**, per GitHub    | On from the start    |
-| **Issues**                   | Off by default                                    | On                   |
-| **A new pull request**       | Defaults to targeting **this** repository         | Targets yours        |
-| **Visibility**               | Public, and a fork's visibility cannot be changed | Yours to choose      |
-| **Your contributions graph** | Commits to a fork do not count                    | They count           |
-
-### What a fork actually buys you
-
-Less than it looks, and it is worth knowing why before choosing it. **The
-standards reach both routes identically.** Every `uses:` in these workflows
-points at `tannergolden/standards@v1`, a moving major tag, so every fix in the
-v1 line arrives the moment it is published whether you forked or generated -
-which is what **Staying current takes no effort** describes further down.
-Forking does not make you more current; that part is already free.
-
-What a fork does sync is the **scaffold**: the twelve stub workflows, the
-directory layout, the seeded documents. Real, but thin, and changed rarely.
-
-> [!IMPORTANT]
-> **Initialisation and `Sync fork` want opposite things.** Once Actions are
-> running, the `init` job claims the repository - it rewrites the identity to
-> your account and **force-pushes the default branch**. That force-push is the
-> moment your history stops being a fast-forward of this one's, so `Sync fork`
-> begins offering to discard your commits rather than catch you up.
->
-> Neither is misbehaving: a fork wants a shared history, and initialisation
-> deliberately rewrites one. If you want the fork **and** the shared history,
-> delete `.github/TEMPLATE_INIT` before enabling Actions. That skips
-> initialisation entirely, and the file itself lists what you then set by hand.
-
-> [!TIP]
-> **There is a third route, and it is usually the better one.** Generate with
-> "Use this template", then add this repository as a second remote:
->
-> ```bash
-> git remote add template https://github.com/tannergolden/path
-> git fetch template
-> ```
->
-> Cherry-pick whatever you want from it, whenever you want it, with none of the
-> fork's costs - no disabled Actions, no force-push collision, and no pull
-> request that opens against somebody else's repository by mistake.
-
-> [!NOTE]
-> **Neither route carries the template flag over.** Every workflow stub here is
-> guarded by `!github.event.repository.is_template`, which is what keeps them
-> silent in this repository - and a fork inherits that flag no more than a
-> generated repository does. They come alive in your copy either way.
+|                  | Hosted badge service                    | Badges drawn here                    |
+| :--------------- | :-------------------------------------- | :----------------------------------- |
+| **A badge is**   | An HTTP response, answered at view time | A file in your repository            |
+| **Down when**    | Their service is                        | Never on its own, only with the page |
+| **Slow when**    | Their service is busy                   | Never, it is a static file           |
+| **Rate limits**  | Yes, and not yours to raise             | None                                 |
+| **Changes when** | Their side deploys                      | You commit                           |
 
 ---
 
-## ⚠️ CI Is Green, And Only Half Configured
+## 🖼️ What It Looks Like
 
-The `ci` job in `checks.yml` runs the commands **you** give it, and it **fails when every stage
-resolves to nothing** rather than reporting a green check that checked nothing.
-That leaves a new scaffold in an awkward spot: there is no source code to lint
-yet, but "no source code" is not the same as "nothing to validate".
-
-So `lint-command` starts out pointing at
-[`.github/scripts/validate-repository.py`](.github/scripts/validate-repository.py),
-which checks the files that exist from the first commit - every YAML and JSON
-file parses, every workflow `uses:` is pinned to a tag or a commit rather than a
-branch, no CRLF or stray whitespace. A typo in any of those breaks something
-quietly, so this is a real gate, not a placeholder that returns zero.
-
-**It is still only half the story.** Nothing is testing or building your project,
-because your project does not exist yet. Open `.github/workflows/checks.yml` and
-replace that command once it does:
+Six lines of YAML in, one committed SVG out:
 
 ```yaml
-jobs:
-  ci:
-    uses: tannergolden/standards/.github/workflows/ci.yml@v1
-    with:
-      lint-command: 'golangci-lint run'
-      test-command: 'go test ./...'
-      build-command: 'go build ./...'
+- name: tests
+  label: Tests
+  message: 1,204 Passing
+  message_color: emerald
+  icon: flask
 ```
 
-Any language, any tool. A few starting points:
+![Tests: 1,204 passing](assets/badges/static/hue-emerald.svg)
 
-| Stack  | `lint-command`                      | `test-command`  | `build-command`         |
-| :----- | :---------------------------------- | :-------------- | :---------------------- |
-| Go     | `golangci-lint run`                 | `go test ./...` | `go build ./...`        |
-| Rust   | `cargo clippy -- -D warnings`       | `cargo test`    | `cargo build --release` |
-| Python | `ruff check .`                      | `pytest`        | `python -m build`       |
-| Node   | `npm run lint`                      | `npm test`      | `npm run build`         |
-| .NET   | `dotnet format --verify-no-changes` | `dotnet test`   | `dotnet build`          |
+Every badge below this line is a real file in this repository, rendered by the
+kit from [`.github/badges.yml`](.github/badges.yml) into `assets/badges/`.
+Nothing on this page is fetched from anywhere.
 
-You do not have to fill in all of them - one real command is enough.
+### Six styles, grouped by the job
+
+`for-the-badge` is the default and the **headline** style: bold uppercase, for
+a masthead or a document header.
+
+![The for-the-badge style](assets/badges/static/gallery-style-for-the-badge.svg)
+
+**Standard** styles are natural-case chips for a body row, the same shape
+square, rounded, bevelled or fully round:
+
+![The flat style](assets/badges/static/gallery-style-flat.svg)
+![The flat-square style](assets/badges/static/gallery-style-flat-square.svg)
+![The plastic style](assets/badges/static/gallery-style-plastic.svg)
+![The pill style](assets/badges/static/gallery-style-pill.svg)
+
+**Dense** is shorter than a line of text, for a table of many badges or one
+sitting inline in a sentence:
+
+![The compact style](assets/badges/static/gallery-style-compact.svg)
+
+### Health badges follow a traffic light
+
+A **gold label** means the value changes over time, so its color has to mean
+something. The message is restricted to green, yellow and red, plus slate for
+an explicit "no status yet". Any other hue on a gold label is rejected at
+render time rather than quietly drawn.
+
+![Build: passing](assets/badges/dynamic/health-passing.svg)
+![Coverage: 78 percent](assets/badges/dynamic/health-degraded.svg)
+![Deploy: failing](assets/badges/dynamic/health-failing.svg)
+![Scan: no data](assets/badges/dynamic/health-unknown.svg)
+
+### Static badges can use the whole palette
+
+64 tokens, one per icon, tuned to one saturation and lightness family so any
+two sit together without clashing. Every one was checked against every other
+and clears the palette's own minimum spacing, so no two read as the same
+color. A raw `#RRGGBB` works anywhere a token does.
+
+![Release: v2.4.0](assets/badges/static/hue-crimson.svg)
+![Docs: live](assets/badges/static/hue-azure.svg)
+![Design: system](assets/badges/static/hue-fuchsia.svg)
+![Bundle: 42 kB](assets/badges/static/hue-amber.svg)
+
+![Latency: 38 ms](assets/badges/static/hue-teal.svg)
+![Runtime: Python 3.12](assets/badges/static/hue-plum.svg)
+![Issues: 3 open](assets/badges/static/hue-coral.svg)
+![Uptime: 99.98 percent](assets/badges/static/hue-forest.svg)
+![Platform: Linux](assets/badges/static/hue-steel.svg)
+
+### 64 icons, drawn in-house
+
+Line glyphs on a 24x24 grid, stroked in the label's ink color so they read on
+any background. No logo is ever pulled from an icon CDN. These six are a
+sample: **[every icon and every color token is in the gallery](docs/Gallery.md)**,
+generated from the registries so it cannot drift.
+
+![Security: hardened](assets/badges/static/icon-lock.svg)
+![Community: welcome](assets/badges/static/icon-users.svg)
+![Deploy: automated](assets/badges/static/icon-rocket.svg)
+![Storage: Postgres](assets/badges/static/icon-database.svg)
+![CDN: global](assets/badges/static/icon-globe.svg)
+![Rank: top 10](assets/badges/static/icon-trophy.svg)
+
+### Blueprint plates, drawn like the banners
+
+Every style has a **blueprint twin**, drawn the way
+[`tannergolden/banners`](https://github.com/tannergolden/banners) draws a
+header: the label lettered on drafting paper, the value on a solid block of
+the print, and the plate framed in the print's line. Name the twin in `style:`.
+It keeps its base style's height, corner, padding and case, so swapping one for
+the other never moves a row.
+
+```yaml
+- name: plate-tests
+  label: Tests
+  message: 1,204 Passing
+  icon: flask
+  style: blueprint-for-the-badge
+  print: greenprint
+```
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-tests-dark.svg"><img alt="Tests: 1,204 Passing" src="assets/badges/static/plate-tests.svg"></picture>
+
+A static plate is drawn in a **print** rather than a message color, and a
+print has a day and a night: its lines on white paper, and the sheet those
+lines are printed on. So a static plate is **two files**, `plate-tests.svg`
+and `plate-tests-dark.svg`, and GitHub shows the one that matches the
+reader's theme. Switch yours to see the other. `snippets` prints the
+`<picture>` that embeds the pair. There are eleven prints, the same eleven the
+banners draw in, with `blueprint` the default; a few of them are below, and
+[the gallery draws all eleven](docs/Gallery.md#️-prints):
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-release-dark.svg"><img alt="Release: v2.4.0" src="assets/badges/static/plate-release.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-bundle-dark.svg"><img alt="Bundle: 42 kB" src="assets/badges/static/plate-bundle.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-docs-dark.svg"><img alt="Docs: Live" src="assets/badges/static/plate-docs.svg"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-runtime-dark.svg"><img alt="Runtime: Python 3.12" src="assets/badges/static/plate-runtime.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-platform-dark.svg"><img alt="Platform: Linux" src="assets/badges/static/plate-platform.svg"></picture>
+
+A **live** plate is a gold label, the same rule as a health badge, and the gold
+sheet tells it apart from a static plate before a word is read. Its value is
+drawn in the print its state names: green in the greenprint, red in the
+redprint, slate in the blackprint, and yellow in the orangeprint, because a
+mustard block would disappear into the gold beside it. One file serves both
+themes. `reserve` sizes the value block for every value it lists, so a build
+that flips from Passing to Failing never changes width:
+
+```yaml
+- name: plate-build
+  label: Build
+  message: Passing
+  label_color: gold
+  message_color: green
+  icon: check
+  style: blueprint-for-the-badge
+  reserve: Failing
+```
+
+![Build: Passing](assets/badges/dynamic/plate-build.svg)
+![Coverage: 78 percent](assets/badges/dynamic/plate-coverage.svg)
+![Deploy: Failing](assets/badges/dynamic/plate-deploy.svg)
+![Scan: No Data](assets/badges/dynamic/plate-scan.svg)
+
+All six twins, each beside its live plate:
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-for-the-badge-dark.svg"><img alt="The blueprint-for-the-badge style" src="assets/badges/static/gallery-blueprint-for-the-badge.svg"></picture>
+![The blueprint-for-the-badge style, live](assets/badges/static/gallery-blueprint-for-the-badge-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-flat-dark.svg"><img alt="The blueprint-flat style" src="assets/badges/static/gallery-blueprint-flat.svg"></picture>
+![The blueprint-flat style, live](assets/badges/static/gallery-blueprint-flat-live.svg)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-flat-square-dark.svg"><img alt="The blueprint-flat-square style" src="assets/badges/static/gallery-blueprint-flat-square.svg"></picture>
+![The blueprint-flat-square style, live](assets/badges/static/gallery-blueprint-flat-square-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-plastic-dark.svg"><img alt="The blueprint-plastic style" src="assets/badges/static/gallery-blueprint-plastic.svg"></picture>
+![The blueprint-plastic style, live](assets/badges/static/gallery-blueprint-plastic-live.svg)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-pill-dark.svg"><img alt="The blueprint-pill style" src="assets/badges/static/gallery-blueprint-pill.svg"></picture>
+![The blueprint-pill style, live](assets/badges/static/gallery-blueprint-pill-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-compact-dark.svg"><img alt="The blueprint-compact style" src="assets/badges/static/gallery-blueprint-compact.svg"></picture>
+![The blueprint-compact style, live](assets/badges/static/gallery-blueprint-compact-live.svg)
+
+The lettering is **outlined Barlow Condensed**, the banners' face: every glyph
+is a path rather than text in a font, so a plate looks the same on every
+device, whatever fonts it has. A label with a character the outlines lack
+(they cover Latin-1 and Latin Extended-A) is refused at render time rather
+than drawn with a gap in it.
+
+---
+
+## 🚀 Use It In Your Own Repository
+
+Add `.github/badges.yml` (start from [`docs/badges.example.yml`](docs/badges.example.yml)),
+then pin a stub to the `v1` tag. That stub is the whole interface: nothing is
+copied into your repository and there is no generator for you to keep current,
+so a fix here reaches you the moment it is published.
+
+The action renders into **your** checkout, never its own, so the committed SVGs
+land beside your data file exactly where you asked for them.
+
+### Render on every push, and commit what changed
+
+`commit: true` stages what the run changed, commits it, and pushes to the
+branch that was checked out. The job needs `contents: write` and nothing
+else: no git steps of its own, no identity to configure.
+
+```yaml
+name: Badges
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: tannergolden/emblems@v1
+        with:
+          mode: render
+          commit: true
+```
+
+That commit is **authored by Tanner Golden**, the kit's author, and
+committed by the workflow that ran it, `github-actions[bot]`. What changed
+is the kit's output rather than anything your workflow wrote, so the author
+field says who drew the badges and the committer field says what pushed
+them, the way a dependency update carries its bot's name. The subject is
+`chore(badges): 🏷️ re-render badges` unless `commit-message` says
+otherwise, and the body records the mode, the data file, and a link to the
+run that made it. Only what the run changed is staged, so a checkout that
+was already carrying edits keeps them.
+
+Rather commit yourself, under an identity of your own? Leave `commit` off:
+the `changed` output still says whether there is anything to commit.
+
+<details>
+<summary>Committing yourself, from the changed output</summary>
+
+```yaml
+      - uses: tannergolden/emblems@v1
+        id: badges
+        with:
+          mode: render
+      - if: steps.badges.outputs.changed == 'true'
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add assets/badges
+          git commit -m 'chore(badges): re-render'
+          git push
+```
+
+</details>
+
+### Or gate on it, so a stale badge fails the build
+
+Nothing to commit and nothing to push. The job simply fails if the committed
+SVGs no longer match the data file.
+
+```yaml
+- uses: actions/checkout@v5
+- uses: tannergolden/emblems@v1
+  with:
+    mode: check
+```
+
+### Refresh live values on a schedule
+
+`set` writes measured values into the data file before rendering, preserving
+its comments and layout. `randomize-seed` rotates the decorative colors, keyed
+by the ISO week, so the pick is stable within a week and changes every Monday.
+With `commit: true`, the refreshed values land on the branch by themselves.
+
+```yaml
+on:
+  schedule:
+    - cron: '0 13 * * *'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - id: measure
+        run: echo "commit=$(git log -1 --format=%cr)" >> "$GITHUB_OUTPUT"
+      - uses: tannergolden/emblems@v1
+        with:
+          mode: render
+          set: |
+            build=Passing:green
+            last-commit=${{ steps.measure.outputs.commit }}:green
+          randomize-seed: ${{ github.run_id }}
+          commit: true
+```
+
+### Migrate a README that already uses shields.io
+
+`localize` finds every `img.shields.io` hotlink in your tracked Markdown,
+renders each one as a committed SVG, and rewrites the reference to point at
+it. Identical badges collapse onto **one** file: forty documents carrying the
+same `Status: Active` badge get one SVG between them, not forty.
+
+```yaml
+- uses: tannergolden/emblems@v1
+  with:
+    mode: localize
+```
+
+### Get the lines to paste
+
+`snippets` prints one ready-to-paste Markdown line per badge, alt text and
+link included, to the log and to the job summary. Nothing is written to the
+repository.
+
+```yaml
+- uses: actions/checkout@v5
+- uses: tannergolden/emblems@v1
+  with:
+    mode: snippets
+```
+
+### Action inputs
+
+| Input            | Default              | Meaning                                                                  |
+| :--------------- | :------------------- | :----------------------------------------------------------------------- |
+| `mode`           | `render`             | `render`, `check`, `localize`, `all`, or `snippets`.                     |
+| `data`           | `.github/badges.yml` | Badge data file, relative to the repository root.                        |
+| `out`            | `assets/badges`      | Output directory for the committed SVGs.                                 |
+| `set`            | none                 | Newline-separated `NAME=MESSAGE[:COLOR]` updates applied first.          |
+| `randomize-seed` | none                 | Rotate decorative colors, keyed by this seed.                            |
+| `commit`         | `false`              | `true` commits what the run changed, as the kit's author, and pushes it. |
+| `commit-message` | per mode             | Subject of that commit. The body is written for you.                     |
+
+Two outputs: `changed` is `'true'` when the run modified a tracked file, and
+`commit` is the SHA the run pushed, or empty when it made no commit.
+
+---
+
+## ⚙️ The Data File
+
+```yaml
+badges:
+  - name: status
+    label: Status
+    message: Active
+    label_color: black
+    message_color: green
+    icon: pulse
+    link: ./
+```
+
+`name` decides the filename. `label_color` decides the folder: a **gold**
+label is a dynamic-health badge and lands in `assets/badges/dynamic/`,
+everything else is static and lands in `assets/badges/static/`.
+
+A blueprint style adds two fields. `print` is a static plate's colour
+(`blueprint` unless you name another), and `reserve` lists the other values a
+plate is sized for, `Passing, Failing`. A static plate takes no
+`message_color` and writes `<name>.svg` and `<name>-dark.svg`; a live plate
+takes no `print`.
+
+Every field is validated. An unknown icon, color token, style, print,
+duplicate or non-kebab-case name fails the render with a precise error rather
+than quietly drawing the wrong badge, and so does a field a badge would
+ignore, like a message color on a plate drawn in its print.
+
+---
+
+## 🎨 What You Get To Draw With
+
+Text is measured with **real Verdana metrics**, the MIT-licensed `anafanafo`
+tables shields.io itself uses, and pinned with SVG `textLength`. A badge
+renders at the same width on every platform, including viewers with no Verdana
+installed. These badges are solid chips, so they look identical in light and
+dark themes. A blueprint plate is lettered in outlines instead, and a static
+one brings its own night file.
+
+**[`docs/Gallery.md`](docs/Gallery.md) draws all of them**: 64 icons grouped by
+what they are for, 64 color tokens grouped by hue with their hex, the
+6 styles and the health colors, then every blueprint twin in all 11 prints,
+each rendered as a real badge with its own name on it, so you pick by eye and copy the name. It is generated from the
+registries by `make gallery` and verified by `make check`, so it can never fall
+behind what the kit can actually draw.
+
+### 1,574,040 badges, before you write a word
+
+Multiply the registries out and they express **1,574,040 visually distinct
+badges**:
+
+```text
+4,036 colour pairs  x  65 icons  x  6 styles
+```
+
+The colour figure is not 64 x 64. The traffic-light rule refuses 60 of those
+4,096 pairs, because a gold label may only paint its message green, yellow,
+red or slate. That refusal is the whole point of the rule:
+
+| Kind | Combinations |
+| :--- | ---: |
+| Static, any non-gold label | 1,572,480 |
+| Health, gold label | 1,560 |
+
+Health badges are **0.1%** of the space. A status signal has almost no room to
+be creative in, which is exactly why green always means the same thing
+everywhere it appears.
+
+Label and message are free text, so the real number is unbounded; the figure
+above is everything except the wording. It is counted rather than claimed:
+`combination_count()` filters every colour pair through the same `validate()`
+the renderer uses, and a test fails if this README disagrees with it.
+
+The blueprint plates are a second space beside that one, since a plate takes a
+print or a state rather than a colour pair: **5,850 more**, of which 4,290 are
+static (11 prints x 65 icons x 6 styles) and 1,560 live (4 states x 65 icons x
+6 styles).
+
+---
+
+## 🔁 How It Runs
+
+**Every render is deterministic and prunes.** The same data file produces
+byte-identical SVGs, so re-running makes no spurious diff, and a file that no
+entry names anymore is deleted, so the output folder always mirrors the data.
+
+**Every SVG carries a kit version stamp.** `--check` hard-fails only
+same-version drift and treats a version difference as "regenerate next time",
+so upgrading the kit can never wedge a consumer's CI. The self-test pins one
+canonical render to a golden hash, and a plate's day, night and live files to
+another, so rendered output cannot change unless someone bumps the version
+knowingly.
+
+**Every commit is a Conventional Commit.** With `commit: true` the run
+commits what it drew as `chore(badges): 🏷️ re-render badges`, authored by the
+kit's author and committed by `github-actions[bot]`, with a body recording
+the mode, the data file and a link to the run, per the
+[commit standard](https://github.com/tannergolden/standards/blob/Development/docs/distribution/Conventional-Commits.md).
+Only what the run changed is staged.
+
+---
+
+## 🧭 Layout
+
+```bash
+emblems/
+├── action.yml                 the composite action
+├── src/
+│   ├── badge-kit.py           the renderer
+│   ├── localize-badges.py     the Markdown codemod
+│   └── fonts/                 the plates' outlined lettering (SIL OFL 1.1)
+├── tests/unit/                the kit's behavioural tests
+├── .github/badges.yml         this repository's own badges
+├── assets/badges/
+│   ├── static/                fixed-value badges (black label), a plate's two files
+│   └── dynamic/               health badges and live plates (gold label)
+└── docs/
+    ├── Badge-Kit.md           the full specification
+    ├── Gallery.md             every icon, color, style and print, generated
+    └── badges.example.yml     a starter data file to copy
+```
+
+---
+
+## 🛠️ Working On It
+
+For developing the kit itself, in a clone of this repository. Consuming it in
+your own repository needs none of this, only the pinned stub above.
+
+```bash
+make help        # list every target
+make badges      # localize any hotlinks, render every badge, refresh the gallery
+make check       # CI gate: self-test, drift check, no hotlink remains
+make self-test   # renderer and parser invariants, no repository needed
+```
+
+### Releasing
+
+Every stub pins `@v1`, a moving major tag. A version is cut by dispatching
+**🏷️ Cut Release** with `vX.Y.Z`: the stub calls the standards' release
+workflow, which refuses a commit that is not on the default branch or a
+version that does not move forward, proves the action and the kit exist at
+the commit and that the self-test passes, then tags the immutable version,
+force-moves `v1`, publishes the release with generated notes and prunes the
+pages it superseded. Version tags are never deleted, so a full-version pin
+keeps resolving. A release that changes what a badge looks like for the same
+data bumps the kit version, and every consumer redraws on its next run.
+
+Full specification: [`docs/Badge-Kit.md`](docs/Badge-Kit.md).
+
+---
+
+## 📄 License
+
+MIT. See [`LICENSE`](LICENSE).
+
+The Verdana advance-width tables in `src/badge-kit.py` are derived from the
+[`anafanafo`](https://github.com/metabolize/anafanafo) dataset, Copyright (c)
+2018 Metabolize LLC, also MIT. [`NOTICE`](NOTICE) records that attribution,
+and it travels in the file's own SPDX headers.
+
+The blueprint plates are lettered with outlines of
+[Barlow Condensed](https://github.com/jpt/barlow), Copyright 2017 The Barlow
+Project Authors, under the SIL Open Font License 1.1, whose text is
+[`src/fonts/OFL-Barlow-Condensed.txt`](src/fonts/OFL-Barlow-Condensed.txt).
+`NOTICE` records it too.
+
+---
+
+## 🔗 See also
 
 > [!TIP]
-> Prefer a `Makefile`? Add one with `lint`, `test`, `build`, and `docs` targets,
-> then delete the `with:` block entirely: the `ci` job falls back to `make <target>`
-> whenever no explicit command is given.
-
----
-
-## 🤖 No AI Infrastructure, On Purpose
-
-This template ships **no agent instruction files and no agent configuration**.
-That is a decision, not an omission.
-
-Agent instructions are **always loaded**. Every byte is paid on every session, in
-every repository, forever. They also carry conventions that belong to a project
-rather than to a scaffold: how you write commits, what must never be touched by
-hand, which commands actually build the thing. Shipping a default set makes that
-choice on your behalf, invisibly, and the usual result is a file nobody wrote and
-nobody trusts.
-
-**Nothing here depends on them.** Initialisation, CI, the rulesets, the release
-flow and every workflow behave identically with none of it present. Adding it is
-additive, and so is taking it away.
-
-When you do want it, there are two supported routes and no wrong answer:
-
-| Route                                                       | You commit                  | Updates arrive by                            |
-| :----------------------------------------------------------- | :-------------------------- | :------------------------------------------- |
-| **By hand**                                                 | the instructions themselves | you editing them                             |
-| **[`tannergolden/intelligence`](https://github.com/tannergolden/intelligence)** | one workflow stub | a release moving a tag, with no pull request |
-
-Writing them by hand suits conventions that are specific to one project. The
-publisher suits several repositories that share one set, for the same reason the
-workflows here are called rather than copied: the law lives in one place, and a
-fix reaches everything pinned to it. Its README carries the stub to copy and the
-version to pin.
-
-> [!IMPORTANT]
-> **Whichever route you take, confirm the tools you actually use load what you
-> wrote.** They do not agree on which filename to read, and some will not find a
-> shared file at all unless a small per-tool file points them at it. Instructions
-> nothing loads are worse than none, because they look finished.
-
-> [!TIP]
-> **Either route stays reversible.** What you write by hand is yours to delete.
-> What the publisher delivers is listed with digests in a lockfile, so the
-> inventory of what arrived is also the manifest for removing it.
-
----
-
-## 🎉 What Happens On Its Own
-
-**"Use this template" substitutes nothing.** GitHub copies every file verbatim,
-so a generated repository would otherwise carry the template author's licence
-holder, funding target, and documentation footers forever.
-
-The `init` job in `lifecycle.yml` fixes that on its own, once. It rewrites the identity to
-**your** account, rewrites the bare "Initial commit" into a proper Conventional
-Commit describing the new repository, and then deletes `.github/TEMPLATE_INIT`,
-which is what stops it ever running again.
-
-Two things it deliberately leaves alone: references to
-`tannergolden/standards`, which are the shared workflows every repository calls
-and are correct for everyone, and your email address, which GitHub keeps
-private. Commits use the `noreply` form, which always routes to you and
-publishes nothing.
-
-> [!NOTE]
-> GitHub does not reliably fire an event when a repository is created from a
-> template. If nothing happens within a minute or two, dispatch **🎯 Standards
-> Lifecycle** from the Actions tab - the `init` job inside it is what claims the
-> repository. Running it twice is harmless: the marker file is what permits
-> it, and it is only removed on success.
-
----
-
-## 🚀 The First Five Minutes
-
-> [!TIP]
-> Every step below, plus signing and the token, is kept as one canonical
-> checklist in the standards:
-> [🙋 What You Do By Hand](https://github.com/tannergolden/standards/blob/Development/docs/introduction/What-You-Do-By-Hand.md).
-
-1. **Check that init ran** - `.github/TEMPLATE_INIT` should be gone and the
-   `LICENSE` should carry your name and the current year. If not, dispatch
-   **🎯 Standards Lifecycle** from the Actions tab.
-2. **Sign your commits off.** `git commit -s` adds the `Signed-off-by` trailer
-   that the DCO check requires. Once branch protection is on, a commit without
-   it blocks the merge. `git config alias.ci 'commit -s'` and forget about it.
-3. **Configure the `ci` job in `checks.yml`**, as above, once you have
-   something to build.
-4. **Apply the settings, then the protection** - run **🎯 Apply Standards**
-   from the Actions tab. `apply-settings` writes the repository settings
-   (squash-only merges, head branches deleted on merge, auto-merge, the
-   security features); `apply-rulesets` writes branch protection.
-   **Both ship switched OFF, and `dry-run` ships on.** Turning `dry-run` off
-   on its own applies only the labels, on a green run that looks like it did
-   everything - so tick the job you want as well. Do settings first: they are
-   checkboxes, while a wrong ruleset blocks every merge. See the token note
-   below before you do.
-5. **Enable private vulnerability reporting** under Settings → Security. The
-   issue chooser gains a "Report a vulnerability" entry automatically, which is
-   why no security contact link is hard-coded.
-6. **Uncomment the rules you want in `.github/CODEOWNERS`**, replacing
-   `@your-org/your-team` with a real owner. A rule naming an owner without write
-   access is a GitHub error, which is why every rule ships commented out.
-7. **Enable ecosystems in `.github/dependabot.yml`** as you add manifests. Only
-   `github-actions` is on, because it is the only one guaranteed to apply.
-8. **Replace this README.** Everything above describes the template, not your
-   project. Nothing rewrites it for you, because only you know what this
-   repository is for. The sections worth keeping are the workflow table and
-   the token note; the rest is scaffolding that has done its job.
-
-> [!IMPORTANT]
-> **🎯 Apply Standards needs a token for two of its three jobs.** Applying the
-> label taxonomy needs nothing. **Writing the settings and the rulesets** each
-> need a token with administration write as `ADMIN_TOKEN`. Without it, those
-> jobs stop with a sentence naming the missing token instead of a bare `403`.
->
-> A fine-grained token scoped to your repositories generated from the
-> templates, with **Administration: Read and write** and nothing else, is all
-> it needs. Step-by-step:
-> [Creating the ADMIN_TOKEN](https://github.com/tannergolden/standards/blob/Development/docs/operations/Branch-Protection.md#-creating-the-admin_token).
-> You can skip it entirely by applying the settings and rulesets yourself,
-> where your own rights are already enough.
-
----
-
-## 📦 What's Inside
-
-| Path                         | Purpose                                                                    |
-| :--------------------------- | :------------------------------------------------------------------------- |
-| `.github/workflows/`         | Twelve trigger workflows. The logic lives in the standards repository      |
-| `.github/`                   | Community health files, CODEOWNERS, Dependabot, release notes config       |
-| `.github/scripts/`           | The repository validator the `ci` job runs until you point it at your own  |
-| `docs/templates/`            | Fill-in project documents, copied out and edited as your project's own law |
-| `src/`, `tests/`             | Empty structure, ready for your first file                                 |
-| `assets/`                    | Logos, images, and diagrams this project owns. Empty, with a layout        |
-| `packages/`, `benchmarks/`   | Reserved, empty                                                            |
-| `.devcontainer/`, `.vscode/` | A working development container and editor defaults                        |
-
-The root carries only what a tool discovers there by mechanism: `.editorconfig`,
-`.gitattributes`, `.gitignore`, `.markdownlint.json`, `.env.example`, `LICENSE`,
-and this file.
-
----
-
-## 🌿 How The Workflows Work
-
-Your repository holds **triggers**. The logic lives in
-[`tannergolden/standards`](https://github.com/tannergolden/standards) and is
-pulled in by `uses:`. GitHub only runs a workflow that lives in the repository
-being pushed to, which is why these twelve small files exist here at all. They
-are grouped by what they do - everything that verifies a change in one file,
-everything that reacts to humans in another - so one push produces one run
-with every check in it, not four runs to read separately.
-
-| Workflow                   | Gives you                                                         |
-| :------------------------- | :---------------------------------------------------------------- |
-| `checks.yml`               | The gates: lint/test/build, secret scan, CodeQL, workflow lint    |
-| `governance.yml`           | PR title and DCO checks, onboarding, triage, stale sweep, slash commands |
-| `release.yml`              | Draft notes, publish assets, registries, prune superseded releases |
-| `maintenance.yml`          | Prunes stale deployments; deletes draft releases on request        |
-| `prune-runs.yml`           | Prunes workflow run history, with its logs and artifacts          |
-| `lifecycle.yml`            | Claims this repository once; tells you when a new major exists    |
-| `dependabot-automerge.yml` | Approves and queues Dependabot's patch and minor updates          |
-| `ci-failure-alert.yml`     | Opens an issue when a watched workflow fails, closes it on green  |
-| `apply-standards.yml`      | Dispatch-only. The label taxonomy and branch protection           |
-| `auto-format.yml`          | Formats what a push touched                                       |
-| `preview-deploy.yml`       | Deploys pushes to a preview target, once one is configured        |
-| `verify-stubs.yml`         | Proves every job's permission ceiling matches its called workflow |
-
-**Do not rename the job ids** `ci` and `secrets` (in `checks.yml`) or `pr`
-(in `governance.yml`). A called workflow reports its checks as
-`<job id> / <job name>`, so branch protection depends on them - the file a
-job lives in does not matter, but its id does.
-
-Every workflow ships installed, and **almost all of them are inert here on
-purpose**: nearly every job carries an `is_template` guard, so it is silent
-in this template and comes alive in every repository generated from it. Only
-two jobs run in the template itself - `prune-runs.yml`, because a template
-accumulates run history like any other repository, and `verify-stubs.yml`,
-because a stub with a wrong ceiling should be caught here rather than
-downstream. Delete any file that does not fit your project - each one is
-yours, and nothing reinstalls it.
-
-> [!IMPORTANT]
-> **The guard covers the required checks too.** `ci`, `secrets` and `pr` -
-> the three job ids branch protection names - are guarded like everything
-> else, so they do not run while a repository is marked as a template. That
-> is right for this one, which has no source code to check. But if you keep
-> your own repository flagged as a template and apply the rulesets from step
-> 4, every pull request will wait forever on three checks that never report.
-> Un-flag it, or leave those checks out of the ruleset.
-
-### Staying current takes no effort
-
-`@v1` is a **moving major tag**. Every fix and feature in the v1 line reaches
-this repository the moment it is published - no pull request, no update
-command, nothing to maintain. Breaking changes never arrive that way, because a
-new major is a different tag.
-
-That leaves exactly one gap, and the `standards` job in `lifecycle.yml` fills
-it: when `v2` is published it opens **one issue** telling you, and changes
-nothing. Adopting a
-major is a decision, not a chore.
-
-Almost nothing here pins a third-party action, either. Every `uses:` in the
-stubs points at `tannergolden/standards`, so the SHA pins behind them are
-maintained once, there, rather than in every repository built from this one.
-The exception is `verify-stubs.yml`, which runs steps of its own and pins
-`actions/checkout` to a commit three times. Those three are why
-`.github/dependabot.yml` ships with `github-actions` enabled: it keeps them
-current, and it is the one ecosystem that is correct for every repository
-from the moment it is generated.
-
-> [!NOTE]
-> **If this repository goes quiet for 60 days, GitHub disables its scheduled
-> workflows.** That is a platform rule for public repositories, not something a
-> workflow can opt out of, and it takes the weekly checks sweep, the governance
-> sweep, and the new-major alarm in `lifecycle.yml` with it. GitHub emails you when it
-> happens, and one commit or a manual dispatch turns them back on.
->
-> The safety net is that **Dependabot is not subject to that rule**. It keeps
-> reading `.github/dependabot.yml`, and because a moving major tag only changes
-> when the major changes, a `v2` still arrives as a pull request even with
-> every cron asleep. So a dormant repository still finds out; it just finds out
-> through Dependabot instead of through an issue.
-
-If you would rather pin exact versions (`@v1.4.2`) for an auditable record of
-what ran when, do that instead - Dependabot updates reusable-workflow
-references natively, and the `dependabot-automerge` stub will merge them on
-green CI.
-
----
-
-## 📚 The Standards
-
-Everything about how to branch, review, release, and secure a repository lives
-in the [Standards Index](https://github.com/tannergolden/standards/blob/Development/docs/README.md).
-Follow it **by link**. A standard copied into your repository is a standard that
-starts going stale the moment you paste it.
-
-The one exception is [`docs/templates/`](docs/templates/README.md), which is
-meant to be copied: those are fill-in documents that become _your_ project's
-decisions. A fill-in **standard** instantiates at its own path minus
-`templates/`; the **work-product forms** - an ADR, a post-mortem, a user
-story - go where a numbered or dated record belongs instead. The
-[catalogue](docs/templates/README.md) gives each destination.
+> The full specification is [`docs/Badge-Kit.md`](docs/Badge-Kit.md).
+> [`tannergolden/trophies`](https://github.com/tannergolden/trophies) is the
+> other half of the pair: it draws a profile's or a repository's trophies the
+> way this draws badges, in the same palette, under the same rule. The
+> engineering standards this repository follows are published in
+> [`tannergolden/standards`](https://github.com/tannergolden/standards), and
+> [`tannergolden/path`](https://github.com/tannergolden/path) is the template
+> a new repository starts from. If you rename or move a file, update every
+> reference to it across the repository to prevent link drift.
 
 ---
 
 <div align="center">
 
-**Structure, not opinions. Standards by link, not by copy.**
+**Self-drawn. Self-hosted. Never rate-limited.**
 
 [↑ Back to Top](#top)
 

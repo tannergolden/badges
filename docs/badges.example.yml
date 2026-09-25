@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: 2026 Tanner Golden
+# SPDX-License-Identifier: MIT
+#
+# A starter badge data file. Copy this to `.github/badges.yml` in your own
+# repository, edit it, and let the action draw them:
+#
+#   - uses: tannergolden/emblems@v1
+#
+# Every field is validated - an unknown icon, color token, style, duplicate
+# or non-kebab-case name fails the render with a precise error instead of
+# silently drawing the wrong badge.
+#
+# The 64 color tokens (or any '#RRGGBB') and the 64 line glyphs are drawn,
+# each with its name on it, in docs/Gallery.md. `mode: snippets` prints a ready-to-paste Markdown
+# embed line for every badge below into the job summary.
+
+badges:
+  # A STATIC badge uses a black label and may paint its message any color.
+  - name: status
+    label: Status
+    message: Active
+    label_color: black
+    message_color: green
+    icon: pulse
+    link: ./
+
+  - name: license
+    label: License
+    message: MIT
+    label_color: black
+    message_color: yellow
+    icon: scale
+    link: ./LICENSE
+
+  # A DYNAMIC-HEALTH badge uses the gold label. Because its color signals a
+  # status, the message is restricted to the traffic-light triad - green,
+  # yellow, red - plus slate for an explicit "no status yet". Anything else
+  # is rejected at render time.
+  #
+  # Refresh the value from CI without hand-editing this file, through the
+  # action's `set` input:  set: build=Failing:red
+  - name: build
+    label: Build Status
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: check
+    link: ./actions
+
+  # A BLUEPRINT PLATE is any style's twin, drawn like tannergolden/banners:
+  # the label on drafting paper, the value on a block of the print. A static
+  # plate takes a `print` (default blueprint) instead of a message_color and
+  # renders two files, tests.svg for the day theme and tests-dark.svg for the
+  # night; `mode: snippets` prints the <picture> that embeds the pair.
+  - name: tests
+    label: Tests
+    message: 1,204 Passing
+    icon: flask
+    style: blueprint-for-the-badge
+    print: greenprint
+    link: ./actions
+
+  # A LIVE PLATE is a gold label, so the traffic-light rule applies, and its
+  # value is drawn in the state's print: one file for both themes. `reserve`
+  # sizes it for its other values too, so flipping to Failing never changes
+  # its width.
+  - name: deploy
+    label: Deploy
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: rocket
+    style: blueprint-for-the-badge
+    reserve: Failing, Pending
+    link: ./actions
