@@ -1,0 +1,183 @@
+# Keep the prefill short - the structured details are captured by the
+# form fields below.
+title: '💬 Q&A: <Question>'
+labels:
+  - 'type: discussion'
+  - 'status: needs triage'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💬 Question & Answer (Q&A)
+        Ask “how do I…?” questions and get help from maintainers and the community.
+        Include what you expected, what happened, what you tried, and any minimal
+        example. Mark the best answer when your question is solved.
+
+  - type: dropdown
+    id: question_type
+    attributes:
+      label: '🧭 Question type'
+      options:
+        - How-to / usage
+        - Troubleshooting
+        - Environment / setup
+        - API usage / contract
+        - Authentication / IAM
+        - Billing / pricing
+        - Performance / efficiency
+        - Reliability / resiliency
+        - Security / hardening
+        - UX / UI behavior
+        - Testing (unit/integration/E2E)
+        - Tooling / DevEx / CI
+        - Data / database / queries
+        - Deployment / config
+        - Internationalization / Localization (i18n/L10n)
+        - Accessibility (A11y)
+        - Documentation / examples
+        - Integration / ecosystem
+        - Version upgrade / migration
+        - Error message explanation
+        - Best practices / recommendations
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: '💻 Language / stack (optional)'
+      options:
+        - JavaScript / TypeScript
+        - Python
+        - Go
+        - Java
+        - C#
+        - Ruby
+        - PHP
+        - Rust
+        - Swift
+        - Kotlin
+        - SQL
+        - Bash / Shell
+        - Other
+
+  - type: textarea
+    id: question
+    attributes:
+      label: '❓ Question'
+      description: 'One clear question. Add relevant context below.'
+      placeholder: 'Example: How do I refresh an access token using the SDK without blocking UI?'
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: '🎯 Goal / expected outcome'
+      description: 'What you wanted to achieve or expected to happen.'
+      placeholder: 'Describe the desired behavior or result.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: '❗ Actual behavior'
+      description: 'What happened instead.'
+      placeholder: 'Observed behavior, error states, or constraints.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: '🧪 What you tried'
+      description: 'Steps, docs followed, or approaches attempted.'
+      placeholder: "- Tried A…\n- Tried B…\n- Still blocked because…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: '🔁 Steps / minimal example (optional)'
+      description: 'Numbered steps or a tiny repro. Gists and sandboxes welcome.'
+      placeholder: |
+        1) …
+        2) …
+        3) …
+        ```ts
+        // minimal snippet
+        ```
+
+  - type: textarea
+    id: errors
+    attributes:
+      label: '📜 Error messages / logs (optional)'
+      description: 'Paste relevant excerpts; sanitize secrets and URLs.'
+      placeholder: |
+        Error: TokenExpiredError: jwt expired at …
+        Stack:
+          at …/auth:42
+
+  - type: checkboxes
+    id: platform
+    attributes:
+      label: '🧰 Platform (optional)'
+      options:
+        - label: Web
+        - label: Mobile
+        - label: Desktop
+        - label: Other
+
+  - type: checkboxes
+    id: affected_areas
+    attributes:
+      label: '🧩 Affected areas (optional)'
+      description: 'Maps to the shared area: labels. Tick any that apply.'
+      options:
+        - label: 'area: analytics'
+        - label: 'area: api'
+        - label: 'area: backend'
+        - label: 'area: database'
+        - label: 'area: dx'
+        - label: 'area: frontend'
+        - label: 'area: governance'
+        - label: 'area: i18n'
+        - label: 'area: infrastructure'
+        - label: 'area: mobile'
+        - label: 'area: ui/ux'
+
+  - type: input
+    id: versions
+    attributes:
+      label: '🏷️ Versions / runtime'
+      description: 'App, SDK, browser, OS, or tool versions.'
+      placeholder: 'App x.y.z · SDK x.y.z · Chrome 128 · macOS 14.5'
+
+  - type: textarea
+    id: links
+    attributes:
+      label: '🔗 Links & references'
+      description: 'Docs, issues, PRs, sandboxes, or related threads.'
+      placeholder: "- Docs: …\n- Sandbox: …\n- Issue: #…"
+
+  - type: checkboxes
+    id: participation
+    attributes:
+      label: '👥 Participation / call to action'
+      options:
+        - label: Maintainer input requested
+        - label: Community answers welcome
+        - label: Looking for code example
+        - label: Documentation improvement suggested
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: '✅ Requester checklist'
+      options:
+        - label: 'I searched existing Discussions and Issues and didn’t find an answer.'
+        - label: 'I included expected vs. actual behavior and what I tried.'
+        - label: 'I sanitized secrets and personally identifiable information (PII).'
