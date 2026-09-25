@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 #
 # The action metadata lives at the repository ROOT because GitHub Marketplace
-# requires it there, and because `uses: tannergolden/emblems@v1` is the
+# requires it there, and because `uses: tannergolden/badges@v1` is the
 # shortest thing a consumer has to type.
-name: 'Emblems Badge Kit'
+name: 'Badge Kit'
 description: >-
   Render committed SVG badges from a data file and localize shields.io
   hotlinks in Markdown. Stdlib Python only, no third-party badge service.
@@ -208,7 +208,7 @@ runs:
               esac
             fi
             version="$("$PY" "$KIT_PATH/src/badge-kit.py" --version)"
-            body="$(printf 'Drawn by tannergolden/emblems (%s), mode %s, from\n%s into %s, by the "%s" workflow:\n%s/%s/actions/runs/%s' \
+            body="$(printf 'Drawn by tannergolden/badges (%s), mode %s, from\n%s into %s, by the "%s" workflow:\n%s/%s/actions/runs/%s' \
               "$version" "$KIT_MODE" "$KIT_DATA" "$KIT_OUT" "${GITHUB_WORKFLOW:-}" \
               "${GITHUB_SERVER_URL:-https://github.com}" "${GITHUB_REPOSITORY:-}" "${GITHUB_RUN_ID:-}")"
             git -C "$root" -c commit.gpgsign=false \

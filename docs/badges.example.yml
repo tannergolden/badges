@@ -4,7 +4,7 @@
 # A starter badge data file. Copy this to `.github/badges.yml` in your own
 # repository, edit it, and let the action draw them:
 #
-#   - uses: tannergolden/emblems@v1
+#   - uses: tannergolden/badges@v1
 #
 # Every field is validated - an unknown icon, color token, style, duplicate
 # or non-kebab-case name fails the render with a precise error instead of

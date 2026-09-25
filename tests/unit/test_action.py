@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Tanner Golden
 # SPDX-License-Identifier: MIT
 """Tests for the composite action's run body: the bash a consumer's
-`uses: tannergolden/emblems@v1` step executes. The script and the identity
+`uses: tannergolden/badges@v1` step executes. The script and the identity
 constants are lifted out of action.yml by indentation and by pattern rather
 than parsed, so the suite needs no PyYAML, like the rest of the kit.
 
@@ -128,7 +128,7 @@ class Commit(unittest.TestCase):
         self.assertEqual(git(self.c.root, "log", "-1", "--format=%s"),
                          "chore(badges): 🏷️ re-render badges")
         body = git(self.c.root, "log", "-1", "--format=%b")
-        for needle in ("tannergolden/emblems", "mode render", ".github/badges.yml",
+        for needle in ("tannergolden/badges", "mode render", ".github/badges.yml",
                        "assets/badges", '"Badges" workflow',
                        "https://github.com/acme/widgets/actions/runs/42"):
             self.assertIn(needle, body)

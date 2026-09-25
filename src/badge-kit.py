@@ -11,7 +11,7 @@ can never be rate-limited. One generator turns a small data file
 repository's own styles with an in-house icon set.
 
 The kit is a standalone repository, consumed as a composite action:
-`uses: tannergolden/emblems@v1` in a consumer's workflow runs this file
+`uses: tannergolden/badges@v1` in a consumer's workflow runs this file
 against that consumer's checkout, so every repository pinned to the major
 tag inherits new icons, styles, and fixes the moment it moves. The DATA
 file is the consumer's own - `.github/badges.yml` in their repository lists

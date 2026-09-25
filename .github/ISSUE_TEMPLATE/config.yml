@@ -40,5 +40,5 @@ contact_links:
   # Settings → General → Features. That is a repository setting rather than
   # a file, so no workflow can switch it on.
   - name: 💬 Questions, Ideas & Support (Discussions)
-    url: 'https://github.com/tannergolden/emblems/discussions'
+    url: 'https://github.com/tannergolden/badges/discussions'
     about: 'How-to questions, tooling setup, and ideas belong in Discussions rather than the issue tracker.'

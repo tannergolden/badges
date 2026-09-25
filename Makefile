@@ -15,7 +15,7 @@ OUT    ?= assets/badges
 
 ## help: List the available targets
 help:
-	@echo "Emblems - the Badge Kit"
+	@echo "Badges - the Badge Kit"
 	@echo
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed -e 's/## /  /' -e 's/:/\t-/' | column -t -s $$'\t'
 

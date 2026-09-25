@@ -56,7 +56,7 @@ installed and a built-in reader substitutes when it is not, so this runs on a
 bare `python3` with nothing to install and nothing to cache.
 
 **Called, never copied.** Your repository holds a data file and a stub that
-pins `uses: tannergolden/emblems@v1`. The drawing happens here, so a fix to a
+pins `uses: tannergolden/badges@v1`. The drawing happens here, so a fix to a
 glyph or a color lands once and reaches every badge pinned to `v1`. That is
 how [`tannergolden/standards`](https://github.com/tannergolden/standards)
 delivers automation and how
@@ -287,7 +287,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: tannergolden/emblems@v1
+      - uses: tannergolden/badges@v1
         with:
           mode: render
           commit: true
@@ -310,7 +310,7 @@ the `changed` output still says whether there is anything to commit.
 <summary>Committing yourself, from the changed output</summary>
 
 ```yaml
-      - uses: tannergolden/emblems@v1
+      - uses: tannergolden/badges@v1
         id: badges
         with:
           mode: render
@@ -332,7 +332,7 @@ SVGs no longer match the data file.
 
 ```yaml
 - uses: actions/checkout@v5
-- uses: tannergolden/emblems@v1
+- uses: tannergolden/badges@v1
   with:
     mode: check
 ```
@@ -358,7 +358,7 @@ jobs:
       - uses: actions/checkout@v5
       - id: measure
         run: echo "commit=$(git log -1 --format=%cr)" >> "$GITHUB_OUTPUT"
-      - uses: tannergolden/emblems@v1
+      - uses: tannergolden/badges@v1
         with:
           mode: render
           set: |
@@ -376,7 +376,7 @@ it. Identical badges collapse onto **one** file: forty documents carrying the
 same `Status: Active` badge get one SVG between them, not forty.
 
 ```yaml
-- uses: tannergolden/emblems@v1
+- uses: tannergolden/badges@v1
   with:
     mode: localize
 ```
@@ -389,7 +389,7 @@ repository.
 
 ```yaml
 - uses: actions/checkout@v5
-- uses: tannergolden/emblems@v1
+- uses: tannergolden/badges@v1
   with:
     mode: snippets
 ```
@@ -516,7 +516,7 @@ Only what the run changed is staged.
 ## 🧭 Layout
 
 ```bash
-emblems/
+badges/
 ├── action.yml                 the composite action
 ├── src/
 │   ├── badge-kit.py           the renderer
