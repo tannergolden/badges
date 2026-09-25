@@ -18,3 +18,16 @@ size a badge) are derived from the anafanafo dataset:
 The MIT License text in LICENSE applies to that material on the same terms.
 The notice also travels in the SPDX headers of src/badge-kit.py, so it is
 retained by anyone who copies the file alone.
+
+The blueprint plates are lettered with glyph outlines in
+src/fonts/barlow-condensed.json, drawn from the Barlow Condensed SemiBold and
+Bold fonts:
+
+    Barlow Condensed
+    Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
+    Licensed under the SIL Open Font License, Version 1.1.
+
+The outlines are distributed under that license, whose text is
+src/fonts/OFL-Barlow-Condensed.txt and travels beside them. They are the same
+outlines tannergolden/banners letters with, so a plate matches the banner
+above it.

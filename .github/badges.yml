@@ -9,7 +9,11 @@
 #   label_color    palette token or '#RRGGBB' - static: black, dynamic-health: gold
 #   message_color  palette token or '#RRGGBB' - carries the semantic meaning
 #   icon           a key from the icon registry (optional; omit for no icon)
-#   style          for-the-badge (default) | flat | flat-square | plastic | pill | compact
+#   style          for-the-badge (default) | flat | flat-square | plastic | pill | compact,
+#                  or the blueprint plate of any of them: blueprint-for-the-badge,
+#                  blueprint-flat, ... (see docs/Badge-Kit.md)
+#   print          a blueprint plate's print (default blueprint); static plates only
+#   reserve        values a blueprint plate is sized for too: Passing, Failing
 #   link           where the badge points when embedded (reference only)
 #
 # Quote raw hex colors ('#2EA043') - unquoted, YAML reads # as a comment.
@@ -234,3 +238,76 @@ badges:
     label_color: black
     message_color: tan
     icon: trophy
+
+  # --- Blueprint plates --------------------------------------------------------
+  # The same badges drawn like tannergolden/banners. A static plate is drawn
+  # in its `print` and writes a day and a night file (<name>.svg and
+  # <name>-dark.svg, embedded together with <picture>); it takes no
+  # message_color. A live plate is a gold label, drawn in its state's print,
+  # one file; `reserve` sizes it for its widest value so it never changes width.
+  - name: plate-release
+    label: Release
+    message: v2.4.0
+    icon: tag
+    style: blueprint-for-the-badge
+    print: redprint
+  - name: plate-bundle
+    label: Bundle
+    message: 42 kB
+    icon: package
+    style: blueprint-for-the-badge
+    print: orangeprint
+  - name: plate-tests
+    label: Tests
+    message: 1,204 Passing
+    icon: flask
+    style: blueprint-for-the-badge
+    print: greenprint
+  - name: plate-docs
+    label: Docs
+    message: Live
+    icon: book
+    style: blueprint-for-the-badge
+    print: blueprint
+  - name: plate-runtime
+    label: Runtime
+    message: Python 3.12
+    icon: terminal
+    style: blueprint-for-the-badge
+    print: purpleprint
+  - name: plate-platform
+    label: Platform
+    message: Linux
+    icon: server
+    style: blueprint-for-the-badge
+    print: blackprint
+  - name: plate-build
+    label: Build
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: check
+    style: blueprint-for-the-badge
+    reserve: Failing
+  - name: plate-coverage
+    label: Coverage
+    message: 78%
+    label_color: gold
+    message_color: yellow
+    icon: chart
+    style: blueprint-for-the-badge
+  - name: plate-deploy
+    label: Deploy
+    message: Failing
+    label_color: gold
+    message_color: red
+    icon: cross
+    style: blueprint-for-the-badge
+    reserve: Passing
+  - name: plate-scan
+    label: Scan
+    message: No Data
+    label_color: gold
+    message_color: slate
+    icon: question
+    style: blueprint-for-the-badge

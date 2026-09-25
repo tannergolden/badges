@@ -173,6 +173,90 @@ generated from the registries so it cannot drift.
 ![CDN: global](assets/badges/static/icon-globe.svg)
 ![Rank: top 10](assets/badges/static/icon-trophy.svg)
 
+### Blueprint plates, drawn like the banners
+
+Every style has a **blueprint twin**, drawn the way
+[`tannergolden/banners`](https://github.com/tannergolden/banners) draws a
+header: the label lettered on drafting paper, the value on a solid block of
+the print, and the plate framed in the print's line. Name the twin in `style:`.
+It keeps its base style's height, corner, padding and case, so swapping one for
+the other never moves a row.
+
+```yaml
+- name: plate-tests
+  label: Tests
+  message: 1,204 Passing
+  icon: flask
+  style: blueprint-for-the-badge
+  print: greenprint
+```
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-tests-dark.svg"><img alt="Tests: 1,204 Passing" src="assets/badges/static/plate-tests.svg"></picture>
+
+A static plate is drawn in a **print** rather than a message color, and a
+print has a day and a night: its lines on white paper, and the sheet those
+lines are printed on. So a static plate is **two files**, `plate-tests.svg`
+and `plate-tests-dark.svg`, and GitHub shows the one that matches the
+reader's theme. Switch yours to see the other. `snippets` prints the
+`<picture>` that embeds the pair. There are eleven prints, the same eleven the
+banners draw in, with `blueprint` the default; a few of them are below, and
+[the gallery draws all eleven](docs/Gallery.md#️-prints):
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-release-dark.svg"><img alt="Release: v2.4.0" src="assets/badges/static/plate-release.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-bundle-dark.svg"><img alt="Bundle: 42 kB" src="assets/badges/static/plate-bundle.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-docs-dark.svg"><img alt="Docs: Live" src="assets/badges/static/plate-docs.svg"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-runtime-dark.svg"><img alt="Runtime: Python 3.12" src="assets/badges/static/plate-runtime.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-platform-dark.svg"><img alt="Platform: Linux" src="assets/badges/static/plate-platform.svg"></picture>
+
+A **live** plate is a gold label, the same rule as a health badge, and the gold
+sheet tells it apart from a static plate before a word is read. Its value is
+drawn in the print its state names: green in the greenprint, red in the
+redprint, slate in the blackprint, and yellow in the orangeprint, because a
+mustard block would disappear into the gold beside it. One file serves both
+themes. `reserve` sizes the value block for every value it lists, so a build
+that flips from Passing to Failing never changes width:
+
+```yaml
+- name: plate-build
+  label: Build
+  message: Passing
+  label_color: gold
+  message_color: green
+  icon: check
+  style: blueprint-for-the-badge
+  reserve: Failing
+```
+
+![Build: Passing](assets/badges/dynamic/plate-build.svg)
+![Coverage: 78 percent](assets/badges/dynamic/plate-coverage.svg)
+![Deploy: Failing](assets/badges/dynamic/plate-deploy.svg)
+![Scan: No Data](assets/badges/dynamic/plate-scan.svg)
+
+All six twins, each beside its live plate:
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-for-the-badge-dark.svg"><img alt="The blueprint-for-the-badge style" src="assets/badges/static/gallery-blueprint-for-the-badge.svg"></picture>
+![The blueprint-for-the-badge style, live](assets/badges/static/gallery-blueprint-for-the-badge-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-flat-dark.svg"><img alt="The blueprint-flat style" src="assets/badges/static/gallery-blueprint-flat.svg"></picture>
+![The blueprint-flat style, live](assets/badges/static/gallery-blueprint-flat-live.svg)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-flat-square-dark.svg"><img alt="The blueprint-flat-square style" src="assets/badges/static/gallery-blueprint-flat-square.svg"></picture>
+![The blueprint-flat-square style, live](assets/badges/static/gallery-blueprint-flat-square-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-plastic-dark.svg"><img alt="The blueprint-plastic style" src="assets/badges/static/gallery-blueprint-plastic.svg"></picture>
+![The blueprint-plastic style, live](assets/badges/static/gallery-blueprint-plastic-live.svg)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-pill-dark.svg"><img alt="The blueprint-pill style" src="assets/badges/static/gallery-blueprint-pill.svg"></picture>
+![The blueprint-pill style, live](assets/badges/static/gallery-blueprint-pill-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/gallery-blueprint-compact-dark.svg"><img alt="The blueprint-compact style" src="assets/badges/static/gallery-blueprint-compact.svg"></picture>
+![The blueprint-compact style, live](assets/badges/static/gallery-blueprint-compact-live.svg)
+
+The lettering is **outlined Barlow Condensed**, the banners' face: every glyph
+is a path rather than text in a font, so a plate looks the same on every
+device, whatever fonts it has. A label with a character the outlines lack
+(they cover Latin-1 and Latin Extended-A) is refused at render time rather
+than drawn with a gap in it.
+
 ---
 
 ## 🚀 Use It In Your Own Repository
@@ -344,9 +428,16 @@ badges:
 label is a dynamic-health badge and lands in `assets/badges/dynamic/`,
 everything else is static and lands in `assets/badges/static/`.
 
-Every field is validated. An unknown icon, color token, style, duplicate or
-non-kebab-case name fails the render with a precise error rather than quietly
-drawing the wrong badge.
+A blueprint style adds two fields. `print` is a static plate's colour
+(`blueprint` unless you name another), and `reserve` lists the other values a
+plate is sized for, `Passing, Failing`. A static plate takes no
+`message_color` and writes `<name>.svg` and `<name>-dark.svg`; a live plate
+takes no `print`.
+
+Every field is validated. An unknown icon, color token, style, print,
+duplicate or non-kebab-case name fails the render with a precise error rather
+than quietly drawing the wrong badge, and so does a field a badge would
+ignore, like a message color on a plate drawn in its print.
 
 ---
 
@@ -355,13 +446,14 @@ drawing the wrong badge.
 Text is measured with **real Verdana metrics**, the MIT-licensed `anafanafo`
 tables shields.io itself uses, and pinned with SVG `textLength`. A badge
 renders at the same width on every platform, including viewers with no Verdana
-installed. Badges are solid chips, so they look identical in light and dark
-themes.
+installed. These badges are solid chips, so they look identical in light and
+dark themes. A blueprint plate is lettered in outlines instead, and a static
+one brings its own night file.
 
 **[`docs/Gallery.md`](docs/Gallery.md) draws all of them**: 64 icons grouped by
 what they are for, 64 color tokens grouped by hue with their hex, the
-6 styles and the health colors, each rendered as a real badge with its own name
-on it, so you pick by eye and copy the name. It is generated from the
+6 styles and the health colors, then every blueprint twin in all 11 prints,
+each rendered as a real badge with its own name on it, so you pick by eye and copy the name. It is generated from the
 registries by `make gallery` and verified by `make check`, so it can never fall
 behind what the kit can actually draw.
 
@@ -392,6 +484,11 @@ above is everything except the wording. It is counted rather than claimed:
 `combination_count()` filters every colour pair through the same `validate()`
 the renderer uses, and a test fails if this README disagrees with it.
 
+The blueprint plates are a second space beside that one, since a plate takes a
+print or a state rather than a colour pair: **5,850 more**, of which 4,290 are
+static (11 prints x 65 icons x 6 styles) and 1,560 live (4 states x 65 icons x
+6 styles).
+
 ---
 
 ## 🔁 How It Runs
@@ -403,8 +500,9 @@ entry names anymore is deleted, so the output folder always mirrors the data.
 **Every SVG carries a kit version stamp.** `--check` hard-fails only
 same-version drift and treats a version difference as "regenerate next time",
 so upgrading the kit can never wedge a consumer's CI. The self-test pins one
-canonical render to a golden hash, so rendered output cannot change unless
-someone bumps the version knowingly.
+canonical render to a golden hash, and a plate's day, night and live files to
+another, so rendered output cannot change unless someone bumps the version
+knowingly.
 
 **Every commit is a Conventional Commit.** With `commit: true` the run
 commits what it drew as `chore(badges): 🏷️ re-render badges`, authored by the
@@ -422,15 +520,16 @@ emblems/
 ├── action.yml                 the composite action
 ├── src/
 │   ├── badge-kit.py           the renderer
-│   └── localize-badges.py     the Markdown codemod
+│   ├── localize-badges.py     the Markdown codemod
+│   └── fonts/                 the plates' outlined lettering (SIL OFL 1.1)
 ├── tests/unit/                the kit's behavioural tests
 ├── .github/badges.yml         this repository's own badges
 ├── assets/badges/
-│   ├── static/                fixed-value badges (black label)
-│   └── dynamic/               health badges (gold label)
+│   ├── static/                fixed-value badges (black label), a plate's two files
+│   └── dynamic/               health badges and live plates (gold label)
 └── docs/
     ├── Badge-Kit.md           the full specification
-    ├── Gallery.md             every icon and color, generated
+    ├── Gallery.md             every icon, color, style and print, generated
     └── badges.example.yml     a starter data file to copy
 ```
 
@@ -472,6 +571,12 @@ The Verdana advance-width tables in `src/badge-kit.py` are derived from the
 [`anafanafo`](https://github.com/metabolize/anafanafo) dataset, Copyright (c)
 2018 Metabolize LLC, also MIT. [`NOTICE`](NOTICE) records that attribution,
 and it travels in the file's own SPDX headers.
+
+The blueprint plates are lettered with outlines of
+[Barlow Condensed](https://github.com/jpt/barlow), Copyright 2017 The Barlow
+Project Authors, under the SIL Open Font License 1.1, whose text is
+[`src/fonts/OFL-Barlow-Condensed.txt`](src/fonts/OFL-Barlow-Condensed.txt).
+`NOTICE` records it too.
 
 ---
 

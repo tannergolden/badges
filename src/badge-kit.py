@@ -28,6 +28,10 @@ tannergolden/standards, docs/technical/interface/Document-Styling-&-Formatting.m
     gold label. Message color carries the semantic meaning.
   - Badges are solid chips, so they render identically in light and dark
     themes.
+  - Every style has a blueprint twin (`blueprint-flat` and so on), drawn like
+    tannergolden/banners: lettered in outlined Barlow Condensed, a static
+    plate in one of eleven prints as a day and a night file, a live plate
+    (gold label) in its state's print as one.
   - Text is measured with real Verdana metrics and pinned with SVG
     `textLength`, so a badge renders at the same width on every platform.
 
@@ -63,6 +67,9 @@ KIT_VERSION = "2"
 # changes while this constant (and therefore KIT_VERSION) was not updated -
 # the mechanical discipline that keeps --check's version tolerance honest.
 GOLDEN_SHA = "88c8a1466bc92d915ab395eb6c48e55548bd2ce94d8e71d1ae0f773d56a30e2f"
+# The same discipline for a blueprint plate: its day, night and live files,
+# hashed together, so neither drawing can change behind the version's back.
+GOLDEN_BLUEPRINT_SHA = "4541b980da39aefd4f67290c2d9cb003dccf97158a0a41f5756f88e399affa80"
 
 # --------------------------------------------------------------------------- #
 # Palette - named tokens keep the data file readable and on-spec. Values map
@@ -541,6 +548,301 @@ def render(label: str, message: str, label_color: str = "black",
 
 
 # --------------------------------------------------------------------------- #
+# Blueprint plates - every style again, drawn the way tannergolden/banners
+# draws a header: the label lettered on drafting paper, the value on a solid
+# block of the print, the whole plate framed in the print's line.
+#
+# A plate is lettered in outlined Barlow Condensed rather than set in a font,
+# so no viewer's installed fonts can change a letter: every glyph is a path,
+# embedded once per file and placed with <use>. The outlines are the ones
+# banners draws with, in src/fonts/barlow-condensed.json (SIL OFL 1.1, see
+# NOTICE), and a label or value with a character they lack is refused at
+# validation rather than drawn with a hole in it.
+#
+# A STATIC plate is two files, `<name>.svg` for the day theme and
+# `<name>-dark.svg` for the night one, because a print has a day and a night:
+# its lines on white paper, and the sheet those lines are printed on. Embed
+# the pair with <picture> (--markdown prints it). A LIVE plate - a gold
+# label - is one file on a gold sheet with its value on a block of the state's
+# print, since a state is the same state in either theme.
+# --------------------------------------------------------------------------- #
+BLUEPRINT = "blueprint-"
+
+# A print is the colour a drawing is reproduced in: `line` for its linework
+# and `ink` for its lettering on white paper by day, and by night the `sheet`
+# those lines are printed on, lettered in `night` - white on the deep sheets,
+# black on the two bright ones white could not be read on. The same eleven,
+# in the same tokens, as tannergolden/banners, so a plate matches the banner
+# above it.
+PRINTS = {
+    "redprint": dict(line="cherry", ink="maroon", sheet="cherry"),
+    "orangeprint": dict(line="tangerine", ink="brick", sheet="tangerine", night="black"),
+    "yellowprint": dict(line="mustard", ink="charcoal", sheet="mustard", night="black"),
+    "greenprint": dict(line="forest", ink="forest", sheet="forest"),
+    "tealprint": dict(line="teal", ink="ocean", sheet="ocean"),
+    "blueprint": dict(line="cobalt", ink="navy", sheet="navy"),
+    "indigoprint": dict(line="iris", ink="indigo", sheet="indigo"),
+    "purpleprint": dict(line="plum", ink="amethyst", sheet="amethyst"),
+    "pinkprint": dict(line="magenta", ink="ruby", sheet="ruby"),
+    "brownprint": dict(line="brown", ink="brown", sheet="brown"),
+    "blackprint": dict(line="charcoal", ink="black", sheet="charcoal"),
+}
+DEFAULT_PRINT = "blueprint"
+
+# A live plate's value block takes the print its state names. Yellow is drawn
+# in the orangeprint: a mustard block beside the gold sheet reads as one
+# colour, and a state that cannot be told from its label is no signal.
+STATE_PRINT = {"green": "greenprint", "yellow": "orangeprint",
+               "red": "redprint", "slate": "blackprint"}
+
+# What a twin letters with, per base style: (size, letter-spacing), in px.
+# Everything else - height, padding, icon, gap, corner, sheen and case - is
+# the base style's own, so swapping a style for its twin never moves a row.
+_BLUEPRINT_TYPE = {
+    "for-the-badge": (11.0, 1.3),
+    "flat": (11.5, 0.35),
+    "flat-square": (11.5, 0.35),
+    "plastic": (11.0, 0.3),
+    "pill": (11.5, 0.35),
+    "compact": (9.5, 0.25),
+}
+BLUEPRINT_STYLES = {
+    BLUEPRINT + key: dict(base=key, size=size, ls=ls,
+                          **{k: STYLES[key][k] for k in
+                             ("h", "pad", "icon", "gap", "rx", "sheen", "caps")})
+    for key, (size, ls) in _BLUEPRINT_TYPE.items()
+}
+DEFAULT_BLUEPRINT = BLUEPRINT + DEFAULT_STYLE
+
+# The two finishes again, in palette tokens: white for the light, ash and
+# black for the fall, so a plate carries no colour outside the family.
+BLUEPRINT_SHEENS = {
+    "soft": (("0", "white", ".1"), ("1", "black", ".1")),
+    "deep": (("0", "white", ".7"), (".1", "ash", ".1"),
+             (".9", "black", ".3"), ("1", "black", ".5")),
+}
+
+GLYPHS_FILE = KIT_DIR / "fonts" / "barlow-condensed.json"
+# Two cuts: SemiBold (`meta`) letters the label, Bold (`num`) the value. The
+# letter is the glyph id's prefix, and neither is a hex digit, so an id can
+# never read as a colour.
+_FACE_ID = {"meta": "m", "num": "n"}
+_GLYPHS: dict | None = None
+
+
+def _faces() -> dict:
+    """The glyph outlines, read once, on first use: a classic render never
+    needs them, so a kit without the file still draws every classic badge."""
+    global _GLYPHS
+    if _GLYPHS is None:
+        import json
+        _GLYPHS = json.loads(GLYPHS_FILE.read_text(encoding="utf-8"))
+    return _GLYPHS
+
+
+def _glyph(font: dict, ch: str) -> str | None:
+    """The glyph that draws `ch`: its own, else its capital, else None."""
+    if ch in font["g"]:
+        return ch
+    up = ch.upper()
+    return up if up in font["g"] else None
+
+
+def missing_glyphs(text: str, face: str = "meta") -> str:
+    """The characters of `text` the blueprint lettering cannot draw, once each."""
+    font = _faces()[face]
+    out = ""
+    for ch in text:
+        if _glyph(font, ch) is None and ch not in out:
+            out += ch
+    return out
+
+
+def _bp_width(text: str, face: str, size: float, ls: float) -> float:
+    """Advance width of `text` at `size`, with `ls` between glyphs."""
+    font = _faces()[face]
+    sc = size / font["upem"]
+    total = sum(font["g"][_glyph(font, ch)][1] * sc for ch in text)
+    return total + ls * max(len(text) - 1, 0)
+
+
+def _fx(v: float, places: int = 3) -> str:
+    """`v` to at most `places` decimals, trailing zeros dropped. Rounds an
+    integer rather than using a format spec, the way banners does, so a near
+    tie at the last place comes out the same on every Python."""
+    n = round(v * 10 ** places)
+    digits = str(abs(n)).rjust(places + 1, "0")
+    head, tail = digits[:-places], digits[-places:].rstrip("0")
+    return ("-" if n < 0 else "") + head + ("." + tail if tail else "")
+
+
+def _f1(v: float) -> str:
+    return _fx(v, 1)
+
+
+class _Lettering:
+    """Collects the glyphs one plate uses, so each is embedded once."""
+
+    def __init__(self, uid: str) -> None:
+        self.uid = uid
+        self.used: set[tuple[str, str]] = set()
+
+    def run(self, s: str, *, face: str, size: float, x: float, y: float,
+            ls: float, fill: str, middle: bool = False) -> str:
+        """A run of outlined glyphs with its baseline at `y`, starting at `x`
+        or centred on it."""
+        if not s:
+            return ""
+        font = _faces()[face]
+        sc = size / font["upem"]
+        x0 = x - _bp_width(s, face, size, ls) / 2 if middle else x
+        adv, uses = 0.0, []
+        for ch in s:
+            key = _glyph(font, ch)
+            if key != " ":
+                self.used.add((face, key))
+                uses.append(f'<use href="#{_FACE_ID[face]}{ord(key)}-{self.uid}" '
+                            f'x="{round(adv)}"/>')
+            adv += font["g"][key][1] + ls / sc
+        return (f'<g transform="translate({_f1(x0)} {_f1(y)}) '
+                f'scale({_fx(sc, 5)} {_fx(-sc, 5)})" fill="{fill}">'
+                + "".join(uses) + "</g>")
+
+    def defs(self) -> str:
+        return "".join(
+            f'<path id="{_FACE_ID[face]}{ord(ch)}-{self.uid}" d="{_faces()[face]["g"][ch][0]}"/>'
+            for face, ch in sorted(self.used, key=lambda k: (k[0], ord(k[1]))))
+
+
+def _block(left: float, w: int, h: float, rx: float) -> str:
+    """The value's block: square on the label side, the style's corner on the
+    outer one, and the whole plate when there is no label."""
+    if left <= 0:
+        return (f'<rect width="{w}" height="{_fx(h)}"'
+                + (f' rx="{_fx(rx)}"' if rx else "") + ' fill="{fill}"/>')
+    if not rx:
+        return f'<path d="M{_f1(left)} 0H{w}V{_fx(h)}H{_f1(left)}Z" fill="{{fill}}"/>'
+    return (f'<path d="M{_f1(left)} 0H{_f1(w - rx)}a{_fx(rx)} {_fx(rx)} 0 0 1 {_fx(rx)} '
+            f'{_fx(rx)}V{_f1(h - rx)}a{_fx(rx)} {_fx(rx)} 0 0 1 {_fx(-rx)} {_fx(rx)}'
+            f'H{_f1(left)}Z" fill="{{fill}}"/>')
+
+
+def _plate(label: str, message: str, icon: str | None, style: str,
+           reserve: tuple[str, ...], col: dict, seed: str) -> str:
+    """Draw one plate in the colours `col` names (palette tokens):
+    paper, wash (or None), grid and its opacity, block, ink (label and icon),
+    letters (the value), frame and its opacity."""
+    if style not in BLUEPRINT_STYLES:
+        raise BadgeError(f"unknown blueprint style {style!r} - one of "
+                         f"{', '.join(BLUEPRINT_STYLES)}")
+    if icon is not None and icon != "" and icon not in ICONS:
+        raise BadgeError(f"unknown icon {icon!r} - list the registry with --icons")
+    g = BLUEPRINT_STYLES[style]
+    aria = f"{label}: {message}" if label and message else (label or message)
+    caps = (lambda s: s.upper()) if g["caps"] else (lambda s: s)
+    text, vals = caps(label), [caps(v) for v in (message, *reserve)]
+    for face, s in (("meta", text), *(("num", v) for v in vals)):
+        gap = missing_glyphs(s, face)
+        if gap:
+            raise BadgeError(f"the blueprint lettering cannot draw {gap!r} in {s!r}")
+    size, ls, pad, h, rx = g["size"], g["ls"], g["pad"], g["h"], g["rx"]
+    has = bool(icon)
+    iw = (g["icon"] + (g["gap"] if text else 0)) if has else 0.0
+    left = (pad + iw + _bp_width(text, "meta", size, ls) + pad) if (text or has) else 0.0
+    vw = (max(_bp_width(v, "num", size, ls) for v in vals) + 2 * pad) if any(vals) else 0.0
+    w = round(left + vw)
+    uid = hashlib.md5(seed.encode()).hexdigest()[:6]
+    hx = lambda token: PALETTE[token]
+    corner = f' rx="{_fx(rx)}"' if rx else ""
+    whole = f'width="{w}" height="{_fx(h)}"{corner}'
+
+    lt = _Lettering(uid)
+    defs = [f'<pattern id="p{uid}" width="10" height="10" patternUnits="userSpaceOnUse">'
+            f'<path d="M10 .5H.5V10" fill="none" stroke="{hx(col["grid"])}" '
+            f'stroke-opacity="{col["grid_op"]}"/></pattern>']
+    body = [f'<rect {whole} fill="{hx(col["paper"])}"/>']
+    if col["wash"]:
+        # A print by day is never quite white: the faintest wash of its line.
+        body.append(f'<rect {whole} fill="{hx(col["wash"])}" fill-opacity=".03"/>')
+    body.append(f'<rect {whole} fill="url(#p{uid})"/>')
+    if vw:
+        body.append(_block(left, w, h, rx).replace("{fill}", hx(col["block"])))
+    if g["sheen"]:
+        stops = "".join(f'<stop offset="{o}" stop-color="{hx(t)}" stop-opacity="{a}"/>'
+                        for o, t, a in BLUEPRINT_SHEENS[g["sheen"]])
+        defs.append(f'<linearGradient id="g{uid}" x2="0" y2="1">{stops}</linearGradient>')
+        body.append(f'<rect {whole} fill="url(#g{uid})"/>')
+    # The label's cap height sits on the plate's centre line, and the value
+    # shares its baseline, so the two read as one line of lettering.
+    font = _faces()["meta"]
+    base = h / 2 + font["cap"] * size / font["upem"] / 2
+    if has:
+        body.append(f'<g transform="translate({_f1(pad)} {_f1((h - g["icon"]) / 2)}) '
+                    f'scale({_fx(g["icon"] / 24, 4)})" fill="none" stroke="{hx(col["ink"])}" '
+                    f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+                    f'{ICONS[icon]}</g>')
+    body.append(lt.run(text, face="meta", size=size, x=pad + iw, y=base, ls=ls,
+                       fill=hx(col["ink"])))
+    body.append(lt.run(vals[0], face="num", size=size, x=left + vw / 2, y=base, ls=ls,
+                       fill=hx(col["letters"]), middle=True))
+    body.append(f'<rect x=".5" y=".5" width="{w - 1}" height="{_fx(h - 1)}"'
+                + (f' rx="{_fx(max(rx - .5, 0))}"' if rx else "")
+                + f' fill="none" stroke="{hx(col["frame"])}" stroke-opacity="{col["frame_op"]}"/>')
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{_fx(h)}" '
+        f'viewBox="0 0 {w} {_fx(h)}" role="img" aria-label="{escape(aria)}">'
+        f'<!--badge-kit v{KIT_VERSION}-->'
+        f'<title>{escape(aria)}</title><defs>{"".join(defs)}{lt.defs()}</defs>'
+        + "".join(body) + "</svg>"
+    )
+
+
+def render_blueprint(label: str, message: str, icon: str | None = None,
+                     style: str = DEFAULT_BLUEPRINT, tone: str = DEFAULT_PRINT,
+                     dark: bool = False, reserve: tuple[str, ...] = ()) -> str:
+    """A static plate: the label on the print's drafting paper, the value on a
+    block of the print. `tone` is a key of PRINTS; `dark` draws the night
+    file. `reserve` sizes the value block for the widest of these values too,
+    so a value that changes keeps the plate the same width."""
+    if tone not in PRINTS:
+        raise BadgeError(f"unknown print {tone!r} - one of {', '.join(PRINTS)}")
+    p = PRINTS[tone]
+    night = p.get("night", "white")
+    if dark:
+        col = dict(paper=p["sheet"], wash=None, grid=night, grid_op=".085",
+                   block=night, ink=night, letters=p["sheet"], frame=night, frame_op=".9")
+    else:
+        col = dict(paper="white", wash=p["line"], grid=p["line"], grid_op=".08",
+                   block=p["line"], ink=p["ink"], letters="white", frame=p["line"],
+                   frame_op=".9")
+    seed = f"{label}|{message}|{icon}|{style}|{tone}|{dark}|{'|'.join(reserve)}"
+    return _plate(label, message, icon, style, tuple(reserve), col, seed)
+
+
+def _state(token: str) -> str:
+    """The health token a message colour names, whether written as the token
+    or as its hex, so a live plate and validate() agree on what is legal."""
+    want = PALETTE.get(token, token).upper()
+    for tok in sorted(HEALTH_COLORS | HEALTH_NEUTRAL):
+        if PALETTE[tok].upper() == want:
+            return tok
+    raise BadgeError(f"a live plate's state must be one of "
+                     f"{', '.join(sorted(HEALTH_COLORS | HEALTH_NEUTRAL))}, not {token!r}")
+
+
+def render_live(label: str, message: str, icon: str | None = None,
+                style: str = DEFAULT_BLUEPRINT, state: str = "green",
+                reserve: tuple[str, ...] = ()) -> str:
+    """A live plate: the label on a gold sheet, the value on a block of the
+    state's print. One file serves both themes."""
+    p = PRINTS[STATE_PRINT[_state(state)]]
+    col = dict(paper="gold", wash=None, grid="black", grid_op=".12", block=p["line"],
+               ink="black", letters=p.get("night", "white"), frame="black", frame_op=".35")
+    seed = f"{label}|{message}|{icon}|{style}|live|{_state(state)}|{'|'.join(reserve)}"
+    return _plate(label, message, icon, style, tuple(reserve), col, seed)
+
+
+# --------------------------------------------------------------------------- #
 # Data file
 # --------------------------------------------------------------------------- #
 def load_badges(path: Path) -> list[dict]:
@@ -552,8 +854,16 @@ def load_badges(path: Path) -> list[dict]:
     def normalize(entries):
         # Both parsers land on the same shape: every value a string, None
         # (an empty `key:` line, or an unquoted `#hex` YAML swallowed as a
-        # comment) becomes "", so PyYAML and the fallback always agree.
-        return [{str(k): ("" if v is None else str(v)) for k, v in e.items()}
+        # comment) becomes "", so PyYAML and the fallback always agree. A
+        # list (`reserve: [Passing, Failing]`) joins with ", ", which is what
+        # the fallback reads the same line as once its brackets are dropped.
+        def scalar(v):
+            if v is None:
+                return ""
+            if isinstance(v, list):
+                return ", ".join("" if x is None else str(x) for x in v)
+            return str(v)
+        return [{str(k): scalar(v) for k, v in e.items()}
                 for e in entries if isinstance(e, dict)]
 
     try:
@@ -626,8 +936,10 @@ def validate(badges: list[dict]) -> list[str]:
         if not str(b.get("label", "")) and not str(b.get("message", "")):
             errors.append(f"{where}: needs a label or a message")
         style = str(b.get("style", DEFAULT_STYLE))
-        if style not in STYLES:
-            errors.append(f"{where}: unknown style {style!r} (one of {', '.join(STYLES)})")
+        if style not in STYLES and style not in BLUEPRINT_STYLES:
+            errors.append(f"{where}: unknown style {style!r} (one of "
+                          f"{', '.join([*STYLES, *BLUEPRINT_STYLES])})")
+        errors.extend(f"{where}: {e}" for e in _blueprint_errors(b, style))
         icon = b.get("icon")
         if icon not in (None, "") and icon not in ICONS:
             errors.append(f"{where}: unknown icon {icon!r} (see --icons)")
@@ -655,7 +967,95 @@ def validate(badges: list[dict]) -> list[str]:
                     f"{', '.join(sorted(HEALTH_COLORS))} (or slate for no status "
                     f"yet) - not {mc!r}"
                 )
+    # A static plate also writes `<name>-dark.svg`, so a badge named that
+    # would be drawn over by it, or draw over it. Names are unique already;
+    # this is the one way two entries can still claim one file.
+    claimed: dict[str, str] = {}
+    for b in badges:
+        name = str(b.get("name") or "")
+        if not name:
+            continue
+        for rel in paths_for(b):
+            other = claimed.setdefault(rel, name)
+            if other != name:
+                errors.append(f"{other} and {name} both write {rel} - rename one "
+                              f"(a static blueprint plate also writes <name>-dark.svg)")
     return errors
+
+
+def _reserve(b: dict) -> tuple[str, ...]:
+    """The values a plate reserves room for: `reserve: Passing, Failing`, or
+    the same as a YAML flow list, `[Passing, Failing]`."""
+    raw = str(b.get("reserve") or "").strip()
+    if raw[:1] == "[" and raw[-1:] == "]":
+        raw = raw[1:-1]
+    return tuple(v.strip().strip("'\"") for v in raw.split(",") if v.strip())
+
+
+def _is_blueprint(b: dict) -> bool:
+    return str(b.get("style", DEFAULT_STYLE)) in BLUEPRINT_STYLES
+
+
+def _blueprint_errors(b: dict, style: str) -> list[str]:
+    """What a plate refuses that a classic badge does not, and the two fields
+    only a plate has. A static plate is drawn in its print, so a message
+    colour would be ignored; a live plate is drawn in its state's print, so a
+    print would be. Either way the field is an error, not a silent no-op."""
+    tone, reserve = str(b.get("print") or ""), _reserve(b)
+    if style not in BLUEPRINT_STYLES:
+        return ([f"'print' is for a blueprint style, not {style!r}"] if tone else []) + (
+            [f"'reserve' is for a blueprint style, not {style!r}"] if reserve else [])
+    out = []
+    lc = str(b.get("label_color") or "black")
+    if _is_gold(lc):
+        if tone:
+            out.append("a live plate (gold label) is drawn in its state's print - "
+                       "drop 'print' and set message_color to "
+                       f"{', '.join(sorted(HEALTH_COLORS))} or slate")
+    else:
+        if PALETTE.get(lc, lc).upper() != PALETTE["black"].upper():
+            out.append(f"a blueprint plate's label is black (static) or gold (live), "
+                       f"not {lc!r}")
+        if str(b.get("message_color") or ""):
+            out.append("a static blueprint plate is drawn in its print - drop "
+                       "message_color and name one with 'print' "
+                       f"({', '.join(PRINTS)})")
+        if tone and tone not in PRINTS:
+            out.append(f"unknown print {tone!r} (one of {', '.join(PRINTS)})")
+    caps = BLUEPRINT_STYLES[style]["caps"]
+    for field, face, text in (("label", "meta", str(b.get("label", ""))),
+                              ("message", "num", str(b.get("message", ""))),
+                              *(("reserve", "num", v) for v in reserve)):
+        gap = missing_glyphs(text.upper() if caps else text, face)
+        if gap:
+            out.append(f"{field} {text!r} has characters the blueprint lettering "
+                       f"cannot draw: {gap!r}")
+    return out
+
+
+def paths_for(b: dict) -> list[str]:
+    """The files a badge writes, relative to the badge tree: one, or a day
+    and a night file for a static plate. Rendering nothing, so the codemod can
+    ask which files are this repository's own without drawing them."""
+    sub, name = _dir_for(b), str(b["name"])
+    if _is_blueprint(b) and sub == "static":
+        return [f"static/{name}.svg", f"static/{name}-dark.svg"]
+    return [f"{sub}/{name}.svg"]
+
+
+def files_for(b: dict) -> dict[str, str]:
+    """{relative path: file content} for one validated badge."""
+    paths = paths_for(b)
+    if not _is_blueprint(b):
+        return {paths[0]: _svg_for(b) + "\n"}
+    label, message = str(b.get("label", "")), str(b.get("message", ""))
+    icon, style, reserve = b.get("icon") or None, str(b["style"]), _reserve(b)
+    if _dir_for(b) == "dynamic":
+        return {paths[0]: render_live(label, message, icon, style,
+                                      str(b.get("message_color") or ""), reserve) + "\n"}
+    tone = str(b.get("print") or DEFAULT_PRINT)
+    return {rel: render_blueprint(label, message, icon, style, tone, dark, reserve) + "\n"
+            for rel, dark in zip(paths, (False, True))}
 
 
 def _svg_for(b: dict) -> str:
@@ -673,7 +1073,16 @@ def _is_gold(token: str) -> bool:
 
 
 def _svg_for_kwargs(kw: dict) -> str:
-    """Render from gallery_specs() kwargs (label/message/colors/icon/style)."""
+    """Render from gallery_specs() kwargs (label/message/colors/icon/style,
+    and for a plate its print and theme, or its state)."""
+    style = kw.get("style", DEFAULT_STYLE)
+    if style in BLUEPRINT_STYLES:
+        if kw.get("state"):
+            return render_live(kw.get("label", ""), kw.get("message", ""),
+                               kw.get("icon"), style, kw["state"])
+        return render_blueprint(kw.get("label", ""), kw.get("message", ""),
+                                kw.get("icon"), style,
+                                kw.get("print", DEFAULT_PRINT), kw.get("dark", False))
     return render(kw.get("label", ""), kw.get("message", ""),
                   kw.get("label_color", "black"), kw.get("message_color", "blue"),
                   kw.get("icon"), kw.get("style", DEFAULT_STYLE))
@@ -787,6 +1196,8 @@ def randomize_static(path: Path, seed: str) -> list[tuple[str, str]]:
         name = str(b.get("name") or "")
         if not name:
             continue
+        if _is_blueprint(b):
+            continue  # a plate is drawn in its print, and has no message color
         lc = str(b.get("label_color") or "black")
         if PALETTE.get(lc, lc).upper() != black_hex:
             continue  # dynamic-health (or non-black label) - never randomized
@@ -926,6 +1337,11 @@ def combination_count() -> dict[str, int]:
                 health += 1
     icons = len(ICONS) + 1          # every glyph, plus none at all
     styles = len(STYLES)
+    # The plates are counted on their own: a plate takes a print or a state
+    # rather than a colour pair, so it is a second space, not more of the
+    # first, and the classic total stays what it counts.
+    plates = len(PRINTS) * icons * len(BLUEPRINT_STYLES)
+    live = len(HEALTH_COLORS | HEALTH_NEUTRAL) * icons * len(BLUEPRINT_STYLES)
     return {
         "pairs": pairs,
         "refused": len(PALETTE) ** 2 - pairs,
@@ -934,6 +1350,9 @@ def combination_count() -> dict[str, int]:
         "total": pairs * icons * styles,
         "health": health * icons * styles,
         "static": (pairs - health) * icons * styles,
+        "plates": plates,
+        "live_plates": live,
+        "blueprint": plates + live,
     }
 
 
@@ -962,6 +1381,23 @@ def gallery_specs() -> list[tuple[str, dict]]:
         out.append((f"{GALLERY_PREFIX}health-{tok}", dict(
             label="health", message=tok, label_color="gold",
             message_color=tok, icon="pulse")))
+    # The plates. A static plate is a pair, day and `-dark`, the way a
+    # consumer's is; a live plate is one file.
+    for key in BLUEPRINT_STYLES:
+        for dark in (False, True):
+            out.append((f"{GALLERY_PREFIX}{key}" + ("-dark" if dark else ""), dict(
+                label="style", message=key, icon="sparkle", style=key, dark=dark)))
+        out.append((f"{GALLERY_PREFIX}{key}-live", dict(
+            label="live", message=key, icon="pulse", style=key, state="green")))
+    for tone in PRINTS:
+        for dark in (False, True):
+            out.append((f"{GALLERY_PREFIX}print-{tone}" + ("-dark" if dark else ""), dict(
+                label="print", message=tone, icon="layers", style=DEFAULT_BLUEPRINT,
+                print=tone, dark=dark)))
+    for tok in sorted(STATE_PRINT):
+        out.append((f"{GALLERY_PREFIX}state-{tok}", dict(
+            label="state", message=tok, icon="pulse", style=DEFAULT_BLUEPRINT,
+            state=tok)))
     return out
 
 
@@ -1034,6 +1470,22 @@ def gallery_markdown(rel: str) -> str:
         img(f"{GALLERY_PREFIX}health-{t}", f"A health badge in {t}")
         for t in sorted(HEALTH_COLORS | HEALTH_NEUTRAL))
 
+    def pic(stem: str, alt: str) -> str:
+        # A static plate's pair, the way a consumer embeds one: the night
+        # file for a dark theme, the day file for everything else.
+        return (f'<picture><source media="(prefers-color-scheme: dark)" '
+                f'srcset="{rel}/static/{stem}-dark.svg">'
+                f'<img alt="{alt}" src="{rel}/static/{stem}.svg"></picture>')
+
+    plate_rows = "\n\n".join(
+        pic(f"{GALLERY_PREFIX}{key}", f"The {key} style") + "\n"
+        + img(f"{GALLERY_PREFIX}{key}-live", f"The {key} style, live")
+        for key in BLUEPRINT_STYLES)
+    prints = _grid([pic(f"{GALLERY_PREFIX}print-{t}", f"The {t}") for t in PRINTS], 3)
+    states = "\n".join(
+        img(f"{GALLERY_PREFIX}state-{t}", f"A live plate in {t}, drawn in the {STATE_PRINT[t]}")
+        for t in sorted(STATE_PRINT))
+
     return f"""<!--
 title: '\U0001F3A8 GALLERY'
 description: 'Every icon, color token and style the Badge Kit can draw, rendered rather than listed.'
@@ -1066,6 +1518,8 @@ _Pick by eye, copy the name._
 | [\U0001F3A8 Color tokens](#-color-tokens) | {len(PALETTE)} | The value of `label_color:` or `message_color:` |
 | [\U0001F9F1 Styles](#-styles) | {len(STYLES)} | The value of `style:` |
 | [\U0001F6A6 Health colors](#-health-colors) | {len(HEALTH_COLORS | HEALTH_NEUTRAL)} | What a gold label may paint its message |
+| [\U0001F4D0 Blueprint plates](#-blueprint-plates) | {len(BLUEPRINT_STYLES)} | The value of `style:` for a plate |
+| [\U0001F5A8️ Prints](#️-prints) | {len(PRINTS)} | The value of `print:` |
 
 Every badge below carries its own name, so the thing you look at and the thing
 you type are the same badge. Nothing on this page is fetched: each one is a
@@ -1132,6 +1586,41 @@ label is rejected at render time rather than quietly drawn.
 
 ---
 
+## \U0001F4D0 Blueprint Plates
+
+Every style again, drawn the way
+[`tannergolden/banners`](https://github.com/tannergolden/banners) draws a
+header: the label lettered on drafting paper, the value on a solid block of the
+print, and the plate framed in the print's line. Each keeps its style's height,
+corner, padding and case, so swapping a style for its twin never moves a row.
+
+The lettering is outlined Barlow Condensed, a path per glyph, so it looks the
+same on every device. A static plate is two files, one for each theme GitHub
+paints, and the day file is shown here unless your theme is dark. The live
+plate beside each one is a gold label: its value is drawn in the state's
+print, one file for either theme.
+
+{plate_rows}
+
+---
+
+## \U0001F5A8️ Prints
+
+A static plate's colour is its **print**, the colour a drawing is reproduced
+in: its lines on white paper by day, and by night the sheet those lines are
+printed on. `blueprint` is the default. These are the same eleven the banners
+draw in, so a row of plates matches the banner above it.
+
+{prints}
+
+A live plate takes no print. Its value is drawn in the print its state names,
+and yellow is drawn in the orangeprint, since a mustard block beside the gold
+sheet would read as one colour:
+
+{states}
+
+---
+
 ## \U0001F517 See also
 
 > [!TIP]
@@ -1187,6 +1676,45 @@ def self_test() -> int:
     ok(golden == GOLDEN_SHA,
        f"rendered output changed (golden sha256 {golden}) - bump KIT_VERSION "
        f"and update GOLDEN_SHA in the same change")
+    # Every plate: well-formed, deterministic, stamped, lettered in paths
+    # rather than <text>, and every id it references is one it defines.
+    for style in BLUEPRINT_STYLES:
+        for label, msg in (("Build Status", "Passing"), ("W%W", "100%"),
+                           ("i", "6.6"), ("A&B", "<ok>"), ("Läuft", "Ünïcödé"),
+                           ("", "Value only"), ("Label only", "")):
+            for svg in (render_blueprint(label, msg, "pulse", style),
+                        render_blueprint(label, msg, None, style, "yellowprint", True),
+                        render_live(label, msg, "pulse", style, "yellow", ("Failing",))):
+                minidom.parseString(svg)
+                ok(f"badge-kit v{KIT_VERSION}" in svg, "plate version stamp present")
+                ok("<text" not in svg, "plate lettered in paths")
+                ids = re.findall(r'\bid="([^"]+)"', svg)
+                ok(len(ids) == len(set(ids)), f"plate ids unique in {style}")
+                refs = set(re.findall(r'(?:href="#|url\(#)([^")]+)', svg))
+                ok(refs <= set(ids), f"plate references only its own ids in {style}")
+            ok(render_live(label, msg, "pulse", style, "green")
+               == render_live(label, msg, "pulse", style, "green"),
+               f"deterministic {style}")
+    golden = hashlib.sha256("".join(
+        (render_blueprint("Golden", "Path", "pulse"),
+         render_blueprint("Golden", "Path", "pulse", dark=True),
+         render_live("Golden", "Path", "pulse", state="green"))).encode()).hexdigest()
+    ok(golden == GOLDEN_BLUEPRINT_SHA,
+       f"plate output changed (golden sha256 {golden}) - bump KIT_VERSION and "
+       f"update GOLDEN_BLUEPRINT_SHA in the same change")
+    # A character the lettering lacks is refused, never drawn as a gap.
+    try:
+        render_blueprint("Status", "漢")
+        ok(False, "a missing glyph must raise")
+    except BadgeError:
+        checks += 1
+    ok(bool(validate([dict(name="x", label="A", message="漢",
+                           style=DEFAULT_BLUEPRINT)])), "validate refuses a missing glyph")
+    # Reserving a value widens the block to the widest; the plate never shrinks.
+    wid = lambda svg: int(re.search(r'width="(\d+)"', svg).group(1))
+    ok(wid(render_live("Build", "Failing", None, state="red", reserve=("Passing",)))
+       == wid(render_live("Build", "Passing", None, state="green", reserve=("Failing",))),
+       "reserve keeps a live plate one width")
     # The accessible name keeps the author's casing; display text is capped.
     svg = render("Build Status", "Passing", "gold", "green")
     ok('aria-label="Build Status: Passing"' in svg, "aria keeps original case")
@@ -1408,8 +1936,16 @@ def main(argv: list[str] | None = None) -> int:
         for b in badges:
             label, message = str(b.get("label", "")), str(b.get("message", ""))
             alt = f"{label}: {message}" if label and message else (label or message)
-            img = f"![{alt}]({rel}/{_dir_for(b)}/{b['name']}.svg)"
             link = str(b.get("link") or "")
+            paths = paths_for(b)
+            if len(paths) == 2:
+                # A static plate's pair: the night file for a dark theme.
+                pic = (f'<picture><source media="(prefers-color-scheme: dark)" '
+                       f'srcset="{rel}/{paths[1]}"><img alt="{escape(alt)}" '
+                       f'src="{rel}/{paths[0]}"></picture>')
+                print(f'<a href="{escape(link)}">{pic}</a>' if link else pic)
+                continue
+            img = f"![{alt}]({rel}/{paths[0]})"
             print(f"[{img}]({link})" if link else img)
         return 0
 
@@ -1418,7 +1954,14 @@ def main(argv: list[str] | None = None) -> int:
     # fixed-value badge. The doc-header classification library shares static/
     # but is owned by scripts/localize-badges.py, so reserve its files - this
     # generator's orphan check and pruning must never touch them.
-    expected = {str(b["name"]): (_dir_for(b), _svg_for(b) + "\n") for b in badges}
+    # A static blueprint plate is two of these, its day and night files.
+    expected: dict[str, str] = {}
+    for b in badges:
+        try:
+            expected.update(files_for(b))
+        except BadgeError as e:
+            print(f"::error::{args.data.name}: {b['name']}: {e}", file=sys.stderr)
+            return 1
     # The gallery shares static/ but is not in the data file, so reserve it
     # the same way the codemod's classification badges are reserved.
     reserved = (_reserved_doc_badges(root, args.data, args.out)
@@ -1429,13 +1972,12 @@ def main(argv: list[str] | None = None) -> int:
         if d.is_dir():
             for p in sorted(d.glob("*.svg")):
                 on_disk[f"{sub}/{p.name}"] = p
-    expected_rel = {f"{sub}/{name}.svg" for name, (sub, _) in expected.items()}
-    orphans = sorted(set(on_disk) - expected_rel - reserved)
+    orphans = sorted(set(on_disk) - set(expected) - reserved)
 
     if args.check:
         stale, regen = [], []
-        for name, (sub, svg) in expected.items():
-            dest = args.out / sub / f"{name}.svg"
+        for rel, svg in expected.items():
+            dest = args.out / rel
             current = dest.read_text(encoding="utf-8") if dest.exists() else ""
             if current == svg:
                 continue
@@ -1444,9 +1986,9 @@ def main(argv: list[str] | None = None) -> int:
                 # Rendered by another kit version (engine sync brought a new
                 # renderer). Not an error: the next `make badges` or the daily
                 # Badge Refresh run regenerates it through the PR flow.
-                regen.append(f"{sub}/{name}")
+                regen.append(rel[:-len(".svg")])
             else:
-                stale.append(f"{sub}/{name}")
+                stale.append(rel[:-len(".svg")])
         for rel in orphans:
             stale.append(f"{rel} (orphaned - not in {args.data.name})")
         if stale:
@@ -1457,22 +1999,22 @@ def main(argv: list[str] | None = None) -> int:
             print(f"::notice::{len(regen)} badge(s) rendered by another kit "
                   f"version ({', '.join(regen)}); the next 'make badges' run "
                   f"re-stamps them.")
-        print(f"Badge check passed - {len(badges)} committed SVG(s) match "
+        print(f"Badge check passed - {len(expected)} committed SVG(s) match "
               f"{args.data.name}.")
         return 0
 
-    for name, (sub, svg) in expected.items():
-        d = args.out / sub
-        d.mkdir(parents=True, exist_ok=True)
-        (d / f"{name}.svg").write_text(svg, encoding="utf-8")
+    for rel, svg in expected.items():
+        dest = args.out / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(svg, encoding="utf-8")
     for rel in orphans:
         # Each type folder mirrors the data file (minus the reserved doc
         # library) - a file no entry names anymore is generator output whose
         # entry was removed.
         (args.out / rel).unlink()
         print(f"Pruned orphaned {rel} (no entry in {args.data.name}).")
-    print(f"Rendered {len(badges)} badge(s) into {args.out}/{{static,dynamic}} "
-          f"from {args.data.name}.")
+    print(f"Rendered {len(badges)} badge(s) as {len(expected)} SVG(s) into "
+          f"{args.out}/{{static,dynamic}} from {args.data.name}.")
     return 0
 
 

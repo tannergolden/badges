@@ -443,3 +443,219 @@ class Combinations(unittest.TestCase):
     def test_the_gallery_states_it_too(self):
         md = bk.gallery_markdown("../assets/badges")
         self.assertIn(f"{self.counts['total']:,}", md)
+
+
+PLATES = """badges:
+  - name: status
+    label: Status
+    message: Active
+    icon: pulse
+    style: blueprint-flat
+    print: greenprint
+    link: ./
+  - name: build
+    label: Build
+    message: Passing
+    label_color: gold
+    message_color: green
+    style: blueprint-for-the-badge
+    reserve: [Failing, Pending]
+"""
+
+
+class Blueprint(unittest.TestCase):
+    """Every style has a plate twin, drawn in a print, in two files."""
+
+    def test_every_style_has_a_twin_with_its_geometry(self):
+        # A twin keeps the base style's box, so swapping one for the other
+        # never moves a row. A new style without a twin fails here.
+        for key, g in bk.STYLES.items():
+            twin = bk.BLUEPRINT_STYLES[bk.BLUEPRINT + key]
+            for field in ("h", "pad", "icon", "gap", "rx", "sheen", "caps"):
+                self.assertEqual(twin[field], g[field], f"{key}.{field}")
+        self.assertEqual(len(bk.BLUEPRINT_STYLES), len(bk.STYLES))
+
+    def test_a_plate_is_the_height_of_its_base_style(self):
+        import re
+        for key, g in bk.STYLES.items():
+            svg = bk.render_blueprint("Build", "Passing", "check", bk.BLUEPRINT + key)
+            self.assertIn(f'height="{g["h"]:g}"', re.search(r"<svg[^>]*>", svg).group(0), key)
+
+    def test_every_colour_is_a_palette_token(self):
+        import re
+        tokens = {v.upper() for v in bk.PALETTE.values()}
+        svgs = [bk.render_blueprint("A", "B", "pulse", s, t, d)
+                for s in bk.BLUEPRINT_STYLES for t in bk.PRINTS for d in (False, True)]
+        svgs += [bk.render_live("A", "B", "pulse", s, st)
+                 for s in bk.BLUEPRINT_STYLES for st in bk.STATE_PRINT]
+        for svg in svgs:
+            for hexc in re.findall(r"#[0-9A-Fa-f]{6}\b", svg):
+                self.assertIn(hexc.upper(), tokens)
+
+    def test_every_print_and_state_print_is_drawn_in_tokens(self):
+        for tone, p in bk.PRINTS.items():
+            for role in ("line", "ink", "sheet"):
+                self.assertIn(p[role], bk.PALETTE, f"{tone}.{role}")
+            self.assertIn(p.get("night", "white"), ("white", "black"), tone)
+        self.assertEqual(set(bk.STATE_PRINT), bk.HEALTH_COLORS | bk.HEALTH_NEUTRAL)
+        for state, tone in bk.STATE_PRINT.items():
+            self.assertIn(tone, bk.PRINTS, state)
+
+    def test_yellow_is_not_drawn_in_the_gold_family(self):
+        # A mustard block next to the gold sheet reads as one colour.
+        svg = bk.render_live("Coverage", "78%", None, state="yellow")
+        self.assertIn(bk.PALETTE["tangerine"], svg)
+        self.assertNotIn(bk.PALETTE["mustard"], svg)
+
+    def test_a_live_plate_accepts_the_state_as_a_hex(self):
+        self.assertEqual(bk.render_live("A", "B", state="green"),
+                         bk.render_live("A", "B", state=bk.PALETTE["green"].lower()))
+
+    def test_reserve_holds_the_width_and_the_label_does_not_move(self):
+        import re
+        width = lambda svg: int(re.search(r'width="(\d+)"', svg).group(1))
+        values = ("Passing", "Failing", "Pending")
+        widths = {width(bk.render_live("Build", v, "check", state="green", reserve=values))
+                  for v in values}
+        self.assertEqual(len(widths), 1)
+        self.assertGreaterEqual(widths.pop(),
+                                width(bk.render_live("Build", "Passing", "check", state="green")))
+
+    def test_the_lettering_is_paths_never_text(self):
+        svg = bk.render_blueprint("Build Status", "Passing", "check")
+        self.assertNotIn("<text", svg)
+        self.assertIn('aria-label="Build Status: Passing"', svg)
+        self.assertIn("<title>Build Status: Passing</title>", svg)
+
+    def test_two_plates_can_share_a_page(self):
+        # Every id carries the plate's own suffix, so inlining two plates
+        # never lets one borrow the other's grid, sheen or glyphs.
+        import re
+        a = bk.render_blueprint("Build", "Passing", None, "blueprint-flat")
+        b = bk.render_blueprint("Build", "Passing", None, "blueprint-flat", "redprint")
+        ids = lambda svg: set(re.findall(r'\bid="([^"]+)"', svg))
+        self.assertFalse(ids(a) & ids(b))
+
+    def test_validation_refuses_what_a_plate_cannot_honour(self):
+        base = dict(name="x", label="A", message="B", style="blueprint-flat")
+        for bad, why in (
+                (dict(base, message_color="teal"), "message_color on a static plate"),
+                (dict(base, print="goldprint"), "an unknown print"),
+                (dict(base, label_color="navy"), "a label neither black nor gold"),
+                (dict(base, label_color="gold", message_color="green", print="redprint"),
+                 "a print on a live plate"),
+                (dict(base, label_color="gold", message_color="teal"), "a non-health state"),
+                (dict(base, message="漢"), "a character the lettering lacks"),
+                (dict(base, reserve="漢"), "a reserved value the lettering lacks"),
+                (dict(name="x", label="A", message="B", print="redprint"), "print on a classic style"),
+                (dict(name="x", label="A", message="B", reserve="C"), "reserve on a classic style"),
+                (dict(base, style="blueprint-3d"), "an unknown plate style")):
+            self.assertTrue(bk.validate([bad]), why)
+        for good in (base, dict(base, print="yellowprint"),
+                     dict(base, label_color="gold", message_color="slate", reserve="C, D")):
+            self.assertEqual(bk.validate([good]), [], good)
+
+    def test_a_night_file_cannot_collide_with_another_badge(self):
+        errors = bk.validate([dict(name="x", label="A", message="B", style="blueprint-flat"),
+                              dict(name="x-dark", label="A", message="B")])
+        self.assertTrue(any("static/x-dark.svg" in e for e in errors), errors)
+
+    def test_reserve_reads_the_same_from_either_parser(self):
+        self.assertEqual(bk._reserve({"reserve": "[Failing, Pending]"}), ("Failing", "Pending"))
+        self.assertEqual(bk._reserve({"reserve": "Failing, 'Pending'"}), ("Failing", "Pending"))
+        self.assertEqual(bk._reserve({}), ())
+
+    def test_randomize_leaves_a_plate_alone(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "badges.yml"
+            p.write_text(PLATES, encoding="utf-8")
+            self.assertEqual(bk.randomize_static(p, "2026-W39"), [])
+            self.assertEqual(p.read_text(encoding="utf-8"), PLATES)
+
+    def test_the_gallery_draws_every_plate_style_print_and_state(self):
+        names = bk.gallery_filenames()
+        for key in bk.BLUEPRINT_STYLES:
+            for suffix in ("", "-dark", "-live"):
+                self.assertIn(f"gallery-{key}{suffix}.svg", names)
+        for tone in bk.PRINTS:
+            self.assertIn(f"gallery-print-{tone}.svg", names)
+            self.assertIn(f"gallery-print-{tone}-dark.svg", names)
+        for state in bk.STATE_PRINT:
+            self.assertIn(f"gallery-state-{state}.svg", names)
+
+    def test_the_readme_states_the_plate_count(self):
+        counts = bk.combination_count()
+        self.assertEqual(counts["blueprint"], counts["plates"] + counts["live_plates"])
+        readme = (Path(__file__).resolve().parents[2] / "README.md").read_text(encoding="utf-8")
+        for key in ("blueprint", "plates", "live_plates"):
+            self.assertTrue(f"{counts[key]:,}" in readme,
+                            f"README does not state the counted {key} ({counts[key]:,})")
+
+
+class BlueprintCli(unittest.TestCase):
+    """A static plate is two files; a live one is one; both are pruned."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / ".github").mkdir()
+        self.data = self.root / ".github" / "badges.yml"
+        self.data.write_text(PLATES, encoding="utf-8")
+        self.out = self.root / "assets" / "badges"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def render(self, *extra: str) -> tuple[int, str]:
+        return run(["--root", str(self.root), *extra])
+
+    def test_a_static_plate_writes_a_day_and_a_night_file(self):
+        self.assertEqual(self.render()[0], 0)
+        self.assertTrue((self.out / "static" / "status.svg").is_file())
+        self.assertTrue((self.out / "static" / "status-dark.svg").is_file())
+        self.assertTrue((self.out / "dynamic" / "build.svg").is_file())
+        self.assertFalse((self.out / "dynamic" / "build-dark.svg").exists(),
+                         "a live plate is one file for both themes")
+        self.assertNotEqual((self.out / "static" / "status.svg").read_text(encoding="utf-8"),
+                            (self.out / "static" / "status-dark.svg").read_text(encoding="utf-8"))
+
+    def test_markdown_embeds_a_static_plate_as_a_picture(self):
+        code, out = self.render("--markdown")
+        self.assertEqual(code, 0)
+        lines = out.strip().splitlines()
+        self.assertEqual(
+            lines[0],
+            '<a href="./"><picture><source media="(prefers-color-scheme: dark)" '
+            'srcset="assets/badges/static/status-dark.svg"><img alt="Status: Active" '
+            'src="assets/badges/static/status.svg"></picture></a>')
+        self.assertEqual(lines[1], "![Build: Passing](assets/badges/dynamic/build.svg)")
+
+    def test_check_catches_a_stale_night_file(self):
+        self.render()
+        self.assertEqual(self.render("--check")[0], 0)
+        (self.out / "static" / "status-dark.svg").write_text("<svg/>", encoding="utf-8")
+        code, out = self.render("--check")
+        self.assertEqual(code, 1)
+        self.assertIn("static/status-dark", out)
+
+    def test_the_night_file_is_pruned_when_the_plate_goes_classic(self):
+        self.render()
+        self.data.write_text(PLATES.replace("    style: blueprint-flat\n    print: greenprint\n", ""),
+                             encoding="utf-8")
+        self.assertEqual(self.render()[0], 0)
+        self.assertTrue((self.out / "static" / "status.svg").is_file())
+        self.assertFalse((self.out / "static" / "status-dark.svg").exists())
+
+    def test_set_updates_a_live_plate(self):
+        code, _ = self.render("--set", "build=Failing:red")
+        self.assertEqual(code, 0)
+        svg = (self.out / "dynamic" / "build.svg").read_text(encoding="utf-8")
+        self.assertIn('aria-label="Build: Failing"', svg)
+        self.assertIn(bk.PALETTE["cherry"], svg, "red is drawn in the redprint")
+
+    def test_the_codemod_counts_a_night_file_as_this_repositorys_own(self):
+        lb = load("localize_badges_plates", "localize-badges.py")
+        lb.configure(self.root, self.data, self.out)
+        own = lb.own_badge_files()
+        self.assertIn("status-dark.svg", own)
+        self.assertIn("build.svg", own)

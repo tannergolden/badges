@@ -30,6 +30,8 @@ _Pick by eye, copy the name._
 | [🎨 Color tokens](#-color-tokens) | 64 | The value of `label_color:` or `message_color:` |
 | [🧱 Styles](#-styles) | 6 | The value of `style:` |
 | [🚦 Health colors](#-health-colors) | 4 | What a gold label may paint its message |
+| [📐 Blueprint plates](#-blueprint-plates) | 6 | The value of `style:` for a plate |
+| [🖨️ Prints](#️-prints) | 11 | The value of `print:` |
 
 Every badge below carries its own name, so the thing you look at and the thing
 you type are the same badge. Nothing on this page is fetched: each one is a
@@ -311,6 +313,73 @@ label is rejected at render time rather than quietly drawn.
 ![A health badge in red](../assets/badges/static/gallery-health-red.svg)
 ![A health badge in slate](../assets/badges/static/gallery-health-slate.svg)
 ![A health badge in yellow](../assets/badges/static/gallery-health-yellow.svg)
+
+---
+
+## 📐 Blueprint Plates
+
+Every style again, drawn the way
+[`tannergolden/banners`](https://github.com/tannergolden/banners) draws a
+header: the label lettered on drafting paper, the value on a solid block of the
+print, and the plate framed in the print's line. Each keeps its style's height,
+corner, padding and case, so swapping a style for its twin never moves a row.
+
+The lettering is outlined Barlow Condensed, a path per glyph, so it looks the
+same on every device. A static plate is two files, one for each theme GitHub
+paints, and the day file is shown here unless your theme is dark. The live
+plate beside each one is a gold label: its value is drawn in the state's
+print, one file for either theme.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-for-the-badge-dark.svg"><img alt="The blueprint-for-the-badge style" src="../assets/badges/static/gallery-blueprint-for-the-badge.svg"></picture>
+![The blueprint-for-the-badge style, live](../assets/badges/static/gallery-blueprint-for-the-badge-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-flat-dark.svg"><img alt="The blueprint-flat style" src="../assets/badges/static/gallery-blueprint-flat.svg"></picture>
+![The blueprint-flat style, live](../assets/badges/static/gallery-blueprint-flat-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-flat-square-dark.svg"><img alt="The blueprint-flat-square style" src="../assets/badges/static/gallery-blueprint-flat-square.svg"></picture>
+![The blueprint-flat-square style, live](../assets/badges/static/gallery-blueprint-flat-square-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-plastic-dark.svg"><img alt="The blueprint-plastic style" src="../assets/badges/static/gallery-blueprint-plastic.svg"></picture>
+![The blueprint-plastic style, live](../assets/badges/static/gallery-blueprint-plastic-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-pill-dark.svg"><img alt="The blueprint-pill style" src="../assets/badges/static/gallery-blueprint-pill.svg"></picture>
+![The blueprint-pill style, live](../assets/badges/static/gallery-blueprint-pill-live.svg)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-blueprint-compact-dark.svg"><img alt="The blueprint-compact style" src="../assets/badges/static/gallery-blueprint-compact.svg"></picture>
+![The blueprint-compact style, live](../assets/badges/static/gallery-blueprint-compact-live.svg)
+
+---
+
+## 🖨️ Prints
+
+A static plate's colour is its **print**, the colour a drawing is reproduced
+in: its lines on white paper by day, and by night the sheet those lines are
+printed on. `blueprint` is the default. These are the same eleven the banners
+draw in, so a row of plates matches the banner above it.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-redprint-dark.svg"><img alt="The redprint" src="../assets/badges/static/gallery-print-redprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-orangeprint-dark.svg"><img alt="The orangeprint" src="../assets/badges/static/gallery-print-orangeprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-yellowprint-dark.svg"><img alt="The yellowprint" src="../assets/badges/static/gallery-print-yellowprint.svg"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-greenprint-dark.svg"><img alt="The greenprint" src="../assets/badges/static/gallery-print-greenprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-tealprint-dark.svg"><img alt="The tealprint" src="../assets/badges/static/gallery-print-tealprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-blueprint-dark.svg"><img alt="The blueprint" src="../assets/badges/static/gallery-print-blueprint.svg"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-indigoprint-dark.svg"><img alt="The indigoprint" src="../assets/badges/static/gallery-print-indigoprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-purpleprint-dark.svg"><img alt="The purpleprint" src="../assets/badges/static/gallery-print-purpleprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-pinkprint-dark.svg"><img alt="The pinkprint" src="../assets/badges/static/gallery-print-pinkprint.svg"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-brownprint-dark.svg"><img alt="The brownprint" src="../assets/badges/static/gallery-print-brownprint.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-blackprint-dark.svg"><img alt="The blackprint" src="../assets/badges/static/gallery-print-blackprint.svg"></picture>
+
+A live plate takes no print. Its value is drawn in the print its state names,
+and yellow is drawn in the orangeprint, since a mustard block beside the gold
+sheet would read as one colour:
+
+![A live plate in green, drawn in the greenprint](../assets/badges/static/gallery-state-green.svg)
+![A live plate in red, drawn in the redprint](../assets/badges/static/gallery-state-red.svg)
+![A live plate in slate, drawn in the blackprint](../assets/badges/static/gallery-state-slate.svg)
+![A live plate in yellow, drawn in the orangeprint](../assets/badges/static/gallery-state-yellow.svg)
 
 ---
 

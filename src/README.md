@@ -7,6 +7,8 @@ The badge kit is two stdlib-only Python programs at the top of this folder, shar
 | `badge-kit.py`       | The renderer. Turns `.github/badges.yml` into committed SVGs, and draws the gallery. |
 | `localize-badges.py` | The codemod. Rewrites `img.shields.io` hotlinks in Markdown into committed SVGs.     |
 
+`fonts/` holds the outlines the blueprint plates are lettered with: Barlow Condensed SemiBold and Bold as SVG paths, one JSON file read on the first plate a run draws, with the SIL Open Font License it ships under beside it.
+
 Both resolve the repository they render **for** from `GITHUB_WORKSPACE`, else the working directory, never from their own location: as a composite action the kit sits in its own checkout while the consumer's repository is the workspace. `action.yml` at the repository root is how a consumer calls them (`uses: tannergolden/emblems@v1`), and the [Badge Kit specification](../docs/Badge-Kit.md) is the contract they implement. Every SVG is stamped with `KIT_VERSION`, and the self-test pins one canonical render to `GOLDEN_SHA`, so rendered output cannot change without someone bumping the version knowingly.
 
 The scaffold's layers are still here for whatever grows next - the template imposes a layout, not a stack:

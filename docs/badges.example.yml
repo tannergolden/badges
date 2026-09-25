@@ -46,3 +46,30 @@ badges:
     message_color: green
     icon: check
     link: ./actions
+
+  # A BLUEPRINT PLATE is any style's twin, drawn like tannergolden/banners:
+  # the label on drafting paper, the value on a block of the print. A static
+  # plate takes a `print` (default blueprint) instead of a message_color and
+  # renders two files, tests.svg for the day theme and tests-dark.svg for the
+  # night; `mode: snippets` prints the <picture> that embeds the pair.
+  - name: tests
+    label: Tests
+    message: 1,204 Passing
+    icon: flask
+    style: blueprint-for-the-badge
+    print: greenprint
+    link: ./actions
+
+  # A LIVE PLATE is a gold label, so the traffic-light rule applies, and its
+  # value is drawn in the state's print: one file for both themes. `reserve`
+  # sizes it for its other values too, so flipping to Failing never changes
+  # its width.
+  - name: deploy
+    label: Deploy
+    message: Passing
+    label_color: gold
+    message_color: green
+    icon: rocket
+    style: blueprint-for-the-badge
+    reserve: Failing, Pending
+    link: ./actions

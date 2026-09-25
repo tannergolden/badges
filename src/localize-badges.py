@@ -313,7 +313,10 @@ def own_badge_files() -> set[str]:
     one as a doc badge: the README embeds them by relative path (correct for
     the main blob view), and rewriting those to absolute would be wrong."""
     try:
-        own = {f"{b['name']}.svg" for b in badge_kit.load_badges(DATA_FILE)}
+        # Every file a badge writes, so a blueprint plate's night file
+        # (<name>-dark.svg) is as much this repository's own as its day one.
+        own = {p.rsplit("/", 1)[-1] for b in badge_kit.load_badges(DATA_FILE)
+               if b.get("name") for p in badge_kit.paths_for(b)}
     except Exception:
         own = set()
     # The gallery is generated rather than listed, but it is no less this

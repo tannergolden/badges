@@ -52,14 +52,15 @@ which one a badge lands in except its label color:
 - **`dynamic/`**: badges whose value changes over time (`build`,
   `last-commit`, a score). **Gold label.**
 - **`static/`**: every fixed-value badge: identity, classification, calls to
-  action, posture. **Black label.**
+  action, posture. **Black label.** A static blueprint plate writes two files
+  here, `<name>.svg` for the day theme and `<name>-dark.svg` for the night.
 
 ---
 
 ## 🧱 Anatomy
 
 A badge is two solid segments with an optional icon left of the label, in one
-of three interchangeable styles:
+of six interchangeable styles:
 
 | Style           | Job                | Look                                                               |
 | :-------------- | :----------------- | :----------------------------------------------------------------- |
@@ -92,7 +93,67 @@ renders at exactly the computed width on every platform. A viewer without
 Verdana sees the same geometry. Ink color is chosen by relative luminance, so
 white text lands on the gold label and dark text on the license yellow.
 
-Badges are solid chips, so they render identically in light and dark themes.
+These badges are solid chips, so they render identically in light and dark
+themes. A blueprint plate, below, brings its own night file instead.
+
+### 📐 Blueprint plates
+
+Every style has a **blueprint twin**, drawn the way
+[`tannergolden/banners`](https://github.com/tannergolden/banners) draws a
+header: the label lettered on drafting paper with a 10px grid, the value on a
+solid block of the print, and the plate framed in the print's line. A twin
+keeps its base style's height, padding, icon size, gap, corner, sheen and case,
+so swapping one for the other never moves a row. Only the lettering differs:
+
+| Style                     | Base            | Lettering                            |
+| :------------------------ | :-------------- | :----------------------------------- |
+| `blueprint-for-the-badge` | `for-the-badge` | 11px capitals, 1.3px letter-spacing. |
+| `blueprint-flat`          | `flat`          | 11.5px, 0.35px letter-spacing.       |
+| `blueprint-flat-square`   | `flat-square`   | 11.5px, 0.35px letter-spacing.       |
+| `blueprint-plastic`       | `plastic`       | 11px, 0.3px letter-spacing.          |
+| `blueprint-pill`          | `pill`          | 11.5px, 0.35px letter-spacing.       |
+| `blueprint-compact`       | `compact`       | 9.5px, 0.25px letter-spacing.        |
+
+The lettering is **outlined Barlow Condensed**, SemiBold for the label and
+Bold for the value: every glyph is a path, embedded once per file and placed
+with `<use>`, so a plate looks the same whatever fonts a viewer has. The
+outlines cover Latin-1 and Latin Extended-A, and a label or value with a
+character they lack is refused by validation rather than drawn with a gap.
+
+A **static** plate (black label) is drawn in a **print**, the colour a drawing
+is reproduced in: by day its lines and lettering on white paper, by night the
+sheet those lines are printed on. So a static plate is two files, and it takes
+no `message_color`. The eleven prints are the banners' own, in palette tokens:
+
+| Print         | Day lines   | Day lettering | Night sheet | Night lettering |
+| :------------ | :---------- | :------------ | :---------- | :-------------- |
+| `redprint`    | `cherry`    | `maroon`      | `cherry`    | `white`         |
+| `orangeprint` | `tangerine` | `brick`       | `tangerine` | `black`         |
+| `yellowprint` | `mustard`   | `charcoal`    | `mustard`   | `black`         |
+| `greenprint`  | `forest`    | `forest`      | `forest`    | `white`         |
+| `tealprint`   | `teal`      | `ocean`       | `ocean`     | `white`         |
+| `blueprint`   | `cobalt`    | `navy`        | `navy`      | `white`         |
+| `indigoprint` | `iris`      | `indigo`      | `indigo`    | `white`         |
+| `purpleprint` | `plum`      | `amethyst`    | `amethyst`  | `white`         |
+| `pinkprint`   | `magenta`   | `ruby`        | `ruby`      | `white`         |
+| `brownprint`  | `brown`     | `brown`       | `brown`     | `white`         |
+| `blackprint`  | `charcoal`  | `black`       | `charcoal`  | `white`         |
+
+`blueprint` is the default. A **live** plate (gold label) is one file for both
+themes: the label on a gold sheet with a black grid, the value on a block of
+the print its state names. The gold sheet is what tells a live plate from a
+static one before a word is read.
+
+| State    | Drawn in      | Why                                                           |
+| :------- | :------------ | :------------------------------------------------------------ |
+| `green`  | `greenprint`  | Healthy.                                                      |
+| `yellow` | `orangeprint` | Degraded. A mustard block beside the gold sheet reads as one. |
+| `red`    | `redprint`    | Failing.                                                      |
+| `slate`  | `blackprint`  | No status yet.                                                |
+
+`reserve` sizes the value block for every value it lists as well as the
+current one, so a plate whose value changes, a build flipping between
+`Passing` and `Failing`, keeps one width and never shifts the row it sits in.
 
 ---
 
@@ -109,11 +170,20 @@ Each entry in `.github/badges.yml` describes one badge:
 | `message_color` |    no    | Palette token or `#RRGGBB`, carrying the semantic meaning.                  |
 | `icon`          |    no    | A key from the icon registry. Omit for no icon.                             |
 | `style`         |    no    | One of the six styles in **Anatomy** above; `for-the-badge` is the default. |
+|                 |          | Or a blueprint twin, `blueprint-<style>`.                                   |
+| `print`         |    no    | A static blueprint plate's print; `blueprint` is the default.               |
+| `reserve`       |    no    | Other values a blueprint plate is sized for: `Passing, Failing`.            |
 | `link`          |    no    | Where the badge points when embedded (reference only).                      |
 
 Every field is **validated**. An unknown icon, color token, style, duplicate
 or non-kebab-case name fails the render with a precise error rather than
 silently producing a wrong badge.
+
+A blueprint plate is validated for what it cannot honour as well. A static
+plate refuses `message_color` (it is drawn in its print) and any label but
+black; a live plate refuses `print` (it is drawn in its state's print);
+`print` and `reserve` are refused on a classic style; and a static plate named
+`x` refuses a second badge named `x-dark`, whose file it would draw over.
 
 `label_color` also decides the folder. The gold label routes a badge to
 `dynamic/`, whether it is written as the token `gold` or as its hex
@@ -135,7 +205,7 @@ space of badges stays unbounded. The generator is the source of truth:
 python3 src/badge-kit.py --palette
 ```
 
-**[The gallery draws all 40](Gallery.md)**, each painted in its own token with
+**[The gallery draws all 64](Gallery.md)**, each painted in its own token with
 its hex beside it, so you pick one by looking rather than by imagining it.
 
 **Role anchors** carry the color roles: `black` (static label), `gold`
@@ -203,8 +273,9 @@ is deterministic, so re-running produces no spurious diff.
 Every SVG carries a **kit version stamp**. `--check` hard-fails only
 *same-version* drift, and treats a version difference as "regenerate on the
 next render", so upgrading the kit can never wedge a downstream CI run. The
-self-test additionally pins one canonical render to a `GOLDEN_SHA`, so
-rendered output cannot change without someone bumping the version knowingly.
+self-test additionally pins one canonical render to a `GOLDEN_SHA`, and a
+plate's day, night and live files to a `GOLDEN_BLUEPRINT_SHA`, so rendered
+output cannot change without someone bumping the version knowingly.
 
 ### 🧰 Command line
 
@@ -238,6 +309,13 @@ badge's alt text (label and message, original casing), its path relative to
 [![Build Status: Passing](assets/badges/dynamic/build.svg)](./actions)
 ```
 
+A static plate's line is a `<picture>` instead, which GitHub honours in
+Markdown: the night file for a dark theme, the day file for everything else.
+
+```html
+<a href="./docs"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-docs-dark.svg"><img alt="Docs: Live" src="assets/badges/static/plate-docs.svg"></picture></a>
+```
+
 `localize-badges.py` adds `--check`: no shields.io hotlink remains, no
 relative doc-badge reference outside the root README, and every referenced
 doc badge exists and is current.
@@ -266,6 +344,13 @@ Reference the committed SVG, always with descriptive alt text:
 
 ```markdown
 ![Build status of the main CI pipeline](assets/badges/dynamic/build.svg)
+```
+
+A static blueprint plate is embedded with `<picture>`, so the reader's theme
+picks its file (`--markdown` prints this for you):
+
+```html
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-tests-dark.svg"><img alt="Tests: 1,204 Passing" src="assets/badges/static/plate-tests.svg"></picture>
 ```
 
 **Relative or absolute?** GitHub only rewrites relative image paths in the
