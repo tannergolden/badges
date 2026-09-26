@@ -1,5 +1,5 @@
 <!--
-title: '🏷️ BADGE GENERATOR'
+title: '🏷️ BADGES'
 description: 'Badges a repository draws for itself, rendered as committed SVGs from one data file so no README depends on a third-party service.'
 tags: [badges, svg, markdown, github-actions]
 category: docs
@@ -9,7 +9,7 @@ category: docs
 
 <div align="center">
 
-# 🏷️ BADGE GENERATOR
+# 🏷️ BADGES
 
 <a name="top"></a>
 
@@ -55,11 +55,13 @@ bare `python3` with nothing to install and nothing to cache.
 **Called, never copied.** Your repository holds a data file and a stub that
 pins `uses: tannergolden/badges@v1`. The drawing happens here, so a fix to a
 glyph or a color lands once and reaches every badge pinned to `v1`. That is
-how [`tannergolden/standards`](https://github.com/tannergolden/standards)
-delivers automation and how
+how [`tannergolden/banners`](https://github.com/tannergolden/banners) draws
+the two ends of a page and its body, how
 [`tannergolden/trophies`](https://github.com/tannergolden/trophies) draws a
-profile's trophies; this is the badge half of the pair, in the same palette,
-under the same rule.
+case, and how [`tannergolden/standards`](https://github.com/tannergolden/standards)
+delivers automation; this draws the badges, in the same palette, under the
+same rule. [`tannergolden/markdown`](https://github.com/tannergolden/markdown)
+calls all three kits from one stub.
 
 ---
 
@@ -270,6 +272,11 @@ so a fix here reaches you the moment it is published.
 The action renders into **your** checkout, never its own, so the committed SVGs
 land beside your data file exactly where you asked for them.
 
+One stub per kit, or one for the whole page:
+[`tannergolden/markdown`](https://github.com/tannergolden/markdown) calls this
+kit, the banners and the trophies from a single workflow, each at its own
+hour, so a README that wants all three needs one stub rather than three.
+
 ### Render on every push, and commit what changed
 
 `commit: true` stages what the run changed, commits it, and pushes to the
@@ -349,7 +356,6 @@ With `commit: true`, the refreshed values land on the branch by themselves.
 on:
   schedule:
     - cron: '0 13 * * *'
-
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -516,6 +522,11 @@ Only what the run changed is staged.
 
 ## 🧭 Layout
 
+The files a consumer resolves at the tag, and where everything else lives:
+
+<details>
+<summary>Every file, and what it is for</summary>
+
 ```bash
 badges/
 ├── action.yml                 the composite action
@@ -533,6 +544,8 @@ badges/
     ├── Gallery.md             every icon, color, style and print, generated
     └── badges.example.yml     a starter data file to copy
 ```
+
+</details>
 
 ---
 
@@ -585,10 +598,13 @@ Project Authors, under the SIL Open Font License 1.1, whose text is
 
 > [!TIP]
 > The full specification is [`docs/Badge-Kit.md`](docs/Badge-Kit.md).
-> [`tannergolden/trophies`](https://github.com/tannergolden/trophies) is the
-> other half of the pair: it draws a profile's or a repository's trophies the
-> way this draws badges, in the same palette, under the same rule. The
-> engineering standards this repository follows are published in
+> [`tannergolden/banners`](https://github.com/tannergolden/banners) draws the
+> header, the footer and the body of a README, and
+> [`tannergolden/trophies`](https://github.com/tannergolden/trophies) its
+> case, the way this draws its badges: in the same palette, under the same
+> rule. [`tannergolden/markdown`](https://github.com/tannergolden/markdown)
+> calls all three from one stub. The engineering standards this repository
+> follows are published in
 > [`tannergolden/standards`](https://github.com/tannergolden/standards), and
 > [`tannergolden/path`](https://github.com/tannergolden/path) is the template
 > a new repository starts from. If you rename or move a file, update every
