@@ -8,7 +8,7 @@
 # that is not on the default branch and a version that does not move
 # forward, proves the files below exist at the commit and that the check
 # passes, then tags the immutable vX.Y.Z, force-moves vX, publishes the
-# release with generated notes and prunes the pages it superseded.
+# release with generated notes and prunes every older release, page and tag.
 #
 # ⚠️ Moving `v1` changes what every repository pinned to it runs next,
 # without anyone on their side doing anything. Treat a release as a
@@ -44,7 +44,7 @@ jobs:
     name: '🏷️ Publish Version & Move Major Tag'
     if: ${{ !github.event.repository.is_template }}
     permissions:
-      contents: write # create tags, publish the release, prune superseded pages
+      contents: write # create tags, publish the release, prune superseded releases and their tags
     uses: tannergolden/standards/.github/workflows/release.yml@v1
     with:
       version: ${{ inputs.version }}
