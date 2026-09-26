@@ -33,7 +33,7 @@ badges:
     link: ./
   - name: role
     label: Role
-    message: Tool
+    message: Action
     label_color: black
     message_color: pink
     icon: book
@@ -52,24 +52,6 @@ badges:
     message_color: yellow
     icon: scale
     link: ./LICENSE
-
-  # --- Dynamic health: gold label --------------------------------------------
-  # Message color is restricted to the traffic-light triad (plus slate for
-  # "no status yet") - validation rejects any other hue on a gold label.
-  - name: build
-    label: Build Status
-    message: Passing
-    label_color: gold
-    message_color: green
-    icon: check
-    link: ./actions
-  - name: last-commit
-    label: Last Commit
-    message: Today
-    label_color: gold
-    message_color: green
-    icon: commit
-    link: ./commits
 
   # --- What the kit is -------------------------------------------------------
   - name: dependencies

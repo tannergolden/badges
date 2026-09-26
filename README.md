@@ -18,12 +18,9 @@ category: docs
 _Drawn, never fetched._
 
 [![Status: Active](assets/badges/static/status.svg)](./)
-[![Role: Tool](assets/badges/static/role.svg)](./)
+[![Role: Action](assets/badges/static/role.svg)](./)
 [![Context: Badges](assets/badges/static/context.svg)](./)
 [![License: MIT](assets/badges/static/license.svg)](./LICENSE)
-
-[![Build status of the main CI pipeline](assets/badges/dynamic/build.svg)](./actions)
-[![Time since the last commit](assets/badges/dynamic/last-commit.svg)](./commits)
 
 [![Dependencies: None](assets/badges/static/dependencies.svg)](./)
 [![Palette: 64 tokens](assets/badges/static/palette.svg)](./)
