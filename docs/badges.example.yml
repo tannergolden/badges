@@ -49,7 +49,8 @@ badges:
 
   # A BLUEPRINT PLATE is any style's twin, drawn like tannergolden/banners:
   # the label on drafting paper, the value on a block of the print. A static
-  # plate takes a `print` (default blueprint) instead of a message_color and
+  # plate takes a `print` (default blueprint; `rainbowprint` follows the
+  # colour the page's banners are in) instead of a message_color and
   # renders two files, tests.svg for the day theme and tests-dark.svg for the
   # night; `mode: snippets` prints the <picture> that embeds the pair.
   - name: tests

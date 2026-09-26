@@ -355,7 +355,9 @@ print, one file for either theme.
 A static plate's colour is its **print**, the colour a drawing is reproduced
 in: its lines on white paper by day, and by night the sheet those lines are
 printed on. `blueprint` is the default. These are the same eleven the banners
-draw in, so a row of plates matches the banner above it.
+draw in, so a row of plates matches the banner above it. `rainbowprint` is
+the colour the page's banners are in now, read from their lock, so a row of
+plates changes colour with the header; without banners it is the redprint.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-redprint-dark.svg"><img alt="The redprint" src="../assets/badges/static/gallery-print-redprint.svg"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="../assets/badges/static/gallery-print-orangeprint-dark.svg"><img alt="The orangeprint" src="../assets/badges/static/gallery-print-orangeprint.svg"></picture>

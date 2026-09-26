@@ -555,6 +555,23 @@ class Blueprint(unittest.TestCase):
                      dict(base, label_color="gold", message_color="slate", reserve="C, D")):
             self.assertEqual(bk.validate([good]), [], good)
 
+    def test_a_rainbowprint_plate_follows_the_banners(self):
+        base = dict(name="x", label="A", message="B", style="blueprint-flat")
+        self.assertEqual(bk.validate([dict(base, print="rainbowprint")]), [])
+        self.assertIn("or rainbowprint", bk.validate([dict(base, print="goldprint")])[0])
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.assertEqual(bk.rainbow_shade(root), "redprint", "without banners, the first colour")
+            (root / ".github").mkdir()
+            lock = root / ".github" / "banners.lock.json"
+            for text, colour in (('{"rainbow": "tealprint"}', "tealprint"), ('{"rainbow": "goldprint"}', "redprint"),
+                                 ('{"last": null}', "redprint"), ("not json", "redprint"), ("[]", "redprint")):
+                lock.write_text(text)
+                self.assertEqual(bk.rainbow_shade(root), colour, text)
+        self.assertEqual(bk.files_for(dict(base, print="rainbowprint"), "tealprint"),
+                         bk.files_for(dict(base, print="tealprint")))
+        self.assertEqual(bk.files_for(dict(base, print="rainbowprint")), bk.files_for(dict(base, print="redprint")))
+
     def test_a_night_file_cannot_collide_with_another_badge(self):
         errors = bk.validate([dict(name="x", label="A", message="B", style="blueprint-flat"),
                               dict(name="x-dark", label="A", message="B")])

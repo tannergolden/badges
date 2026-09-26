@@ -589,6 +589,28 @@ PRINTS = {
 }
 DEFAULT_PRINT = "blueprint"
 
+# The rainbow, in the banners' order. A plate in `rainbowprint` is drawn in
+# the colour the page's banners are in now: the banners kit remembers which
+# colour of the spectrum its last update took in its lock, and a plate that
+# follows it changes colour with the header above it. Without banners it is
+# the first colour.
+SPECTRUM = ("redprint", "orangeprint", "yellowprint", "greenprint", "tealprint", "blueprint", "indigoprint",
+            "purpleprint", "pinkprint")
+RAINBOW = "rainbowprint"
+BANNERS_LOCK = Path(".github") / "banners.lock.json"
+
+
+def rainbow_shade(root: Path) -> str:
+    """The print a `rainbowprint` plate is drawn in now: the colour the banners
+    beside it are in, else the first of the spectrum."""
+    import json
+    try:
+        colour = json.loads((root / BANNERS_LOCK).read_text(encoding="utf-8")).get("rainbow")
+    except (OSError, ValueError, AttributeError):
+        colour = None
+    return colour if colour in SPECTRUM else SPECTRUM[0]
+
+
 # A live plate's value block takes the print its state names. Yellow is drawn
 # in the orangeprint: a mustard block beside the gold sheet reads as one
 # colour, and a state that cannot be told from its label is no signal.
@@ -1020,8 +1042,8 @@ def _blueprint_errors(b: dict, style: str) -> list[str]:
             out.append("a static blueprint plate is drawn in its print - drop "
                        "message_color and name one with 'print' "
                        f"({', '.join(PRINTS)})")
-        if tone and tone not in PRINTS:
-            out.append(f"unknown print {tone!r} (one of {', '.join(PRINTS)})")
+        if tone and tone != RAINBOW and tone not in PRINTS:
+            out.append(f"unknown print {tone!r} (one of {', '.join(PRINTS)}, or {RAINBOW})")
     caps = BLUEPRINT_STYLES[style]["caps"]
     for field, face, text in (("label", "meta", str(b.get("label", ""))),
                               ("message", "num", str(b.get("message", ""))),
@@ -1043,7 +1065,7 @@ def paths_for(b: dict) -> list[str]:
     return [f"{sub}/{name}.svg"]
 
 
-def files_for(b: dict) -> dict[str, str]:
+def files_for(b: dict, rainbow: str = SPECTRUM[0]) -> dict[str, str]:
     """{relative path: file content} for one validated badge."""
     paths = paths_for(b)
     if not _is_blueprint(b):
@@ -1054,6 +1076,8 @@ def files_for(b: dict) -> dict[str, str]:
         return {paths[0]: render_live(label, message, icon, style,
                                       str(b.get("message_color") or ""), reserve) + "\n"}
     tone = str(b.get("print") or DEFAULT_PRINT)
+    if tone == RAINBOW:
+        tone = rainbow   # the colour the banners are in now, resolved once per run by the caller
     return {rel: render_blueprint(label, message, icon, style, tone, dark, reserve) + "\n"
             for rel, dark in zip(paths, (False, True))}
 
@@ -1609,7 +1633,9 @@ print, one file for either theme.
 A static plate's colour is its **print**, the colour a drawing is reproduced
 in: its lines on white paper by day, and by night the sheet those lines are
 printed on. `blueprint` is the default. These are the same eleven the banners
-draw in, so a row of plates matches the banner above it.
+draw in, so a row of plates matches the banner above it. `rainbowprint` is
+the colour the page's banners are in now, read from their lock, so a row of
+plates changes colour with the header; without banners it is the redprint.
 
 {prints}
 
@@ -1956,9 +1982,10 @@ def main(argv: list[str] | None = None) -> int:
     # generator's orphan check and pruning must never touch them.
     # A static blueprint plate is two of these, its day and night files.
     expected: dict[str, str] = {}
+    rainbow = rainbow_shade(root)
     for b in badges:
         try:
-            expected.update(files_for(b))
+            expected.update(files_for(b, rainbow))
         except BadgeError as e:
             print(f"::error::{args.data.name}: {b['name']}: {e}", file=sys.stderr)
             return 1

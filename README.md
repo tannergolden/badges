@@ -200,7 +200,11 @@ and `plate-tests-dark.svg`, and GitHub shows the one that matches the
 reader's theme. Switch yours to see the other. `snippets` prints the
 `<picture>` that embeds the pair. There are eleven prints, the same eleven the
 banners draw in, with `blueprint` the default; a few of them are below, and
-[the gallery draws all eleven](docs/Gallery.md#️-prints):
+[the gallery draws all eleven](docs/Gallery.md#️-prints). A plate whose print
+is `rainbowprint` is drawn in the colour the page's banners are in now: the
+banners' lock records which colour of the spectrum their last update took,
+and the plate follows it, so a row of plates changes colour with the header
+above it. Without banners it is the redprint, the first of the spectrum.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-release-dark.svg"><img alt="Release: v2.4.0" src="assets/badges/static/plate-release.svg"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-bundle-dark.svg"><img alt="Bundle: 42 kB" src="assets/badges/static/plate-bundle.svg"></picture>
