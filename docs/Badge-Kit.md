@@ -13,14 +13,9 @@ category: docs
 
 <a name="top"></a>
 
-**Badges a repository draws for itself: committed SVGs from one generator, never a third-party request.**
+**The specification: what the data file says, what it draws, and what it promises.**
 
 _Drawn, never fetched._
-
-[![Status: Active](../assets/badges/static/status.svg)](../)
-[![Role: Tool](../assets/badges/static/role.svg)](../)
-[![Context: Badges](../assets/badges/static/context.svg)](../)
-[![License: MIT](../assets/badges/static/license.svg)](../LICENSE)
 
 </div>
 
@@ -378,9 +373,24 @@ the dynamic-health row sits below them, separated by a blank line.
 
 ---
 
+## 🔗 See also
+
+> [!TIP]
+> The [README](../README.md) shows the kit in use and how to pin it.
+> [`Gallery.md`](Gallery.md) draws every icon, token, style and print, and
+> [`badges.example.yml`](badges.example.yml) is a starter data file to copy.
+> The banners and the trophies drawn beside these badges are specified in
+> [`tannergolden/banners`](https://github.com/tannergolden/banners) and
+> [`tannergolden/trophies`](https://github.com/tannergolden/trophies), and
+> [`tannergolden/markdown`](https://github.com/tannergolden/markdown) calls
+> all three kits from one stub. The standards this document follows are
+> published in [`tannergolden/standards`](https://github.com/tannergolden/standards).
+
+---
+
 <div align="center">
 
-**Self-drawn. Self-hosted. Never rate-limited.**
+**Data in. Badges out. Nothing fetched.**
 
 [↑ Back to Top](#top)
 
