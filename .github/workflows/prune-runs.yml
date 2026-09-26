@@ -26,7 +26,7 @@ name: '🧹 Prune Run History'
 
 on:
   schedule:
-    - cron: '30 6 * * 1' # weekly, half an hour after 🧹 Maintenance
+    - cron: '0 7 * * 1' # weekly, an hour after 🧹 Maintenance
   workflow_dispatch:
     inputs:
       dry-run:
