@@ -4,14 +4,14 @@
 # The action metadata lives at the repository ROOT because GitHub Marketplace
 # requires it there, and because `uses: tannergolden/badges@v1` is the
 # shortest thing a consumer has to type.
-name: 'Badge Kit'
+name: 'Badges'
 description: >-
   Render committed SVG badges from a data file and localize shields.io
   hotlinks in Markdown. Stdlib Python only, no third-party badge service.
 author: 'Tanner Golden'
 branding:
-  icon: 'award'
-  color: 'yellow'
+  icon: 'tag'
+  color: 'purple'
 
 inputs:
   mode:
