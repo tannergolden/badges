@@ -39,6 +39,16 @@ inputs:
       before rendering, e.g. "build=Passing:green". Ignored in check mode.
     required: false
     default: ''
+  theme:
+    description: >-
+      The print every static plate is drawn in, instead of the one it names:
+      blueprint, redprint, orangeprint, yellowprint, greenprint, tealprint,
+      indigoprint, purpleprint, pinkprint, brownprint, blackprint, or
+      rainbowprint to follow the colour the page's banners are in. A live
+      plate keeps its state's print and a classic badge its colours. Empty:
+      each plate's own print. The Markdown workflow passes its theme here.
+    required: false
+    default: ''
   randomize-seed:
     description: >-
       Recolor decorative static badges from the non-status palette, keyed by
@@ -90,6 +100,7 @@ runs:
         KIT_OUT: ${{ inputs.out }}
         KIT_SET: ${{ inputs.set }}
         KIT_SEED: ${{ inputs.randomize-seed }}
+        KIT_THEME: ${{ inputs.theme }}
         KIT_COMMIT: ${{ inputs.commit }}
         KIT_MESSAGE: ${{ inputs.commit-message }}
         KIT_PATH: ${{ github.action_path }}
@@ -153,6 +164,8 @@ runs:
               if [ -n "$KIT_SEED" ]; then args+=( --randomize-static "$KIT_SEED" ); fi
               ;;
           esac
+          # The theme reaches check mode too, so a check compares against what render drew.
+          if [ -n "$KIT_THEME" ]; then args+=( --theme "$KIT_THEME" ); fi
           if [ "$KIT_MODE" = "snippets" ]; then
             snippets="$("$PY" "$KIT_PATH/src/badge-kit.py" "${args[@]}")"
             printf '%s\n' "$snippets"

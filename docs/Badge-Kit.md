@@ -290,6 +290,7 @@ defaults to `GITHUB_WORKSPACE` and then the working directory:
 | :-------------------------- | :------------------------------------------------------------------ |
 | `--check`                   | Verify committed SVGs match the data file. Writes nothing.          |
 | `--set NAME=MESSAGE[:COLOR]`| Update one value in place, then render. Repeatable.                 |
+| `--theme PRINT`             | Draw every static plate in `PRINT` instead of its own print.        |
 | `--randomize-static SEED`   | Rotate decorative static colors, keyed by `SEED`, then render.      |
 | `--markdown`                | Print one ready-to-paste embed line per badge. Writes nothing.      |
 | `--icons`, `--palette`      | List the registries.                                                |

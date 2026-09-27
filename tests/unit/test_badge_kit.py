@@ -572,6 +572,19 @@ class Blueprint(unittest.TestCase):
                          bk.files_for(dict(base, print="tealprint")))
         self.assertEqual(bk.files_for(dict(base, print="rainbowprint")), bk.files_for(dict(base, print="redprint")))
 
+    def test_a_theme_draws_every_static_plate_in_its_print_and_leaves_the_rest(self):
+        base = dict(name="x", label="A", message="B", style="blueprint-flat")
+        live = dict(base, name="y", label_color="gold", message_color="green")
+        classic = dict(name="z", label="A", message="B", label_color="black", message_color="green")
+        self.assertEqual(bk.files_for(dict(base, print="redprint"), theme="blackprint"),
+                         bk.files_for(dict(base, print="blackprint")), "the theme wins over the plate's print")
+        self.assertEqual(bk.files_for(base, theme="tealprint"), bk.files_for(dict(base, print="tealprint")),
+                         "and over the default print")
+        self.assertEqual(bk.files_for(base, "tealprint", theme="rainbowprint"),
+                         bk.files_for(dict(base, print="tealprint")), "a rainbowprint theme follows the banners")
+        self.assertEqual(bk.files_for(live, theme="blackprint"), bk.files_for(live), "a live plate keeps its state")
+        self.assertEqual(bk.files_for(classic, theme="blackprint"), bk.files_for(classic), "a classic badge its colours")
+
     def test_a_night_file_cannot_collide_with_another_badge(self):
         errors = bk.validate([dict(name="x", label="A", message="B", style="blueprint-flat"),
                               dict(name="x-dark", label="A", message="B")])
@@ -646,6 +659,23 @@ class BlueprintCli(unittest.TestCase):
             'srcset="assets/badges/static/status-dark.svg"><img alt="Status: Active" '
             'src="assets/badges/static/status.svg"></picture></a>')
         self.assertEqual(lines[1], "![Build: Passing](assets/badges/dynamic/build.svg)")
+
+    def test_a_theme_redraws_the_static_plates_and_check_holds_it_to_them(self):
+        self.render()
+        build = (self.out / "dynamic" / "build.svg").read_text(encoding="utf-8")
+        self.assertEqual(self.render("--theme", "blackprint")[0], 0)
+        self.assertEqual((self.out / "static" / "status.svg").read_text(encoding="utf-8"),
+                         bk.files_for(dict(name="status", label="Status", message="Active", icon="pulse",
+                                           style="blueprint-flat", print="blackprint"))["static/status.svg"])
+        self.assertEqual((self.out / "dynamic" / "build.svg").read_text(encoding="utf-8"), build)
+        self.assertEqual(self.render("--check", "--theme", "blackprint")[0], 0)
+        self.assertEqual(self.render("--check")[0], 1, "without the theme the plate reads as stale")
+
+    def test_an_unknown_theme_is_refused_with_the_prints_named(self):
+        code, out = self.render("--theme", "goldprint")
+        self.assertEqual(code, 1)
+        self.assertIn("blackprint", out)
+        self.assertFalse(self.out.exists(), "nothing is drawn")
 
     def test_check_catches_a_stale_night_file(self):
         self.render()

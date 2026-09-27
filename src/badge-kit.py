@@ -1065,8 +1065,13 @@ def paths_for(b: dict) -> list[str]:
     return [f"{sub}/{name}.svg"]
 
 
-def files_for(b: dict, rainbow: str = SPECTRUM[0]) -> dict[str, str]:
-    """{relative path: file content} for one validated badge."""
+def files_for(b: dict, rainbow: str = SPECTRUM[0], theme: str = "") -> dict[str, str]:
+    """{relative path: file content} for one validated badge.
+
+    A `theme` draws a static plate in that print instead of the one it names,
+    so one choice colours a whole page. A live plate keeps its state's print
+    and a classic badge its colours: theirs mean something.
+    """
     paths = paths_for(b)
     if not _is_blueprint(b):
         return {paths[0]: _svg_for(b) + "\n"}
@@ -1075,7 +1080,7 @@ def files_for(b: dict, rainbow: str = SPECTRUM[0]) -> dict[str, str]:
     if _dir_for(b) == "dynamic":
         return {paths[0]: render_live(label, message, icon, style,
                                       str(b.get("message_color") or ""), reserve) + "\n"}
-    tone = str(b.get("print") or DEFAULT_PRINT)
+    tone = theme or str(b.get("print") or DEFAULT_PRINT)
     if tone == RAINBOW:
         tone = rainbow   # the colour the banners are in now, resolved once per run by the caller
     return {rel: render_blueprint(label, message, icon, style, tone, dark, reserve) + "\n"
@@ -1825,6 +1830,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="recolor the decorative static badges from the non-status "
                          "palette, keyed by SEED (the Badge Refresh workflow passes "
                          "the ISO week, so colors rotate weekly), then re-render")
+    ap.add_argument("--theme", default="", metavar="PRINT",
+                    help="draw every static plate in this print instead of the one it "
+                         "names (rainbowprint follows the banners); live plates and "
+                         "classic badges keep their colours")
     ap.add_argument("--icons", action="store_true", help="list the icon registry")
     ap.add_argument("--palette", action="store_true", help="list the palette tokens")
     ap.add_argument("--self-test", action="store_true",
@@ -1900,6 +1909,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.self_test:
         return self_test()
+
+    if args.theme and args.theme != RAINBOW and args.theme not in PRINTS:
+        print(f"::error::--theme: unknown print {args.theme!r} "
+              f"(one of {', '.join(PRINTS)}, or {RAINBOW})", file=sys.stderr)
+        return 1
 
     if not args.data.exists():
         if args.check:
@@ -1985,7 +1999,7 @@ def main(argv: list[str] | None = None) -> int:
     rainbow = rainbow_shade(root)
     for b in badges:
         try:
-            expected.update(files_for(b, rainbow))
+            expected.update(files_for(b, rainbow, args.theme))
         except BadgeError as e:
             print(f"::error::{args.data.name}: {b['name']}: {e}", file=sys.stderr)
             return 1

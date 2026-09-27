@@ -409,6 +409,7 @@ repository.
 | `data`           | `.github/badges.yml` | Badge data file, relative to the repository root.                        |
 | `out`            | `assets/badges`      | Output directory for the committed SVGs.                                 |
 | `set`            | none                 | Newline-separated `NAME=MESSAGE[:COLOR]` updates applied first.          |
+| `theme`          | none                 | Draw every static plate in this print; live plates keep their states.    |
 | `randomize-seed` | none                 | Rotate decorative colors, keyed by this seed.                            |
 | `commit`         | `false`              | `true` commits what the run changed, as the kit's author, and pushes it. |
 | `commit-message` | per mode             | Subject of that commit. The body is written for you.                     |

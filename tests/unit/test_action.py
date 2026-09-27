@@ -10,6 +10,7 @@ Every test renders into a throwaway consumer repository with a bare remote
 behind it, so a push here is a real push."""
 from __future__ import annotations
 
+import importlib.util
 import os
 import re
 import subprocess
@@ -73,7 +74,7 @@ class Consumer:
         git(self.root, "remote", "add", "origin", str(self.remote))
         git(self.root, "push", "-q", "-u", "origin", "main")
 
-    def run(self, mode: str = "render", commit: str = "true", message: str = ""):
+    def run(self, mode: str = "render", commit: str = "true", message: str = "", theme: str = ""):
         """Run the action's script as Actions would: inputs through env."""
         out = self.tmp / "output.txt"
         out.write_text("", encoding="utf-8")
@@ -81,7 +82,7 @@ class Consumer:
         env.update(IDENTITY)
         env.update({
             "KIT_MODE": mode, "KIT_DATA": ".github/badges.yml", "KIT_OUT": "assets/badges",
-            "KIT_SET": "", "KIT_SEED": "", "KIT_PATH": str(ROOT),
+            "KIT_SET": "", "KIT_SEED": "", "KIT_THEME": theme, "KIT_PATH": str(ROOT),
             "KIT_COMMIT": commit, "KIT_MESSAGE": message,
             "GITHUB_WORKSPACE": str(self.root), "GITHUB_OUTPUT": str(out),
             "GITHUB_REPOSITORY": "acme/widgets", "GITHUB_SERVER_URL": "https://github.com",
@@ -201,6 +202,22 @@ class Commit(unittest.TestCase):
         self.assertTrue(any(f.startswith("assets/badges/static/") for f in files), files)
         self.assertNotIn("img.shields.io", (self.c.root / "README.md").read_text(encoding="utf-8"))
         self.assertEqual(self.c.remote_main(), out["commit"])
+
+    def test_the_theme_input_reaches_the_renderer_and_its_check(self):
+        (self.c.root / ".github" / "badges.yml").write_text(
+            "badges:\n  - name: status\n    label: Status\n    message: Active\n"
+            "    style: blueprint-flat\n    print: greenprint\n", encoding="utf-8")
+        git(self.c.root, "commit", "-q", "-am", "a plate")
+        proc, outputs = self.c.run(theme="blackprint")
+        self.assertRan(proc)
+        drawn = (self.c.root / "assets" / "badges" / "static" / "status.svg").read_text(encoding="utf-8")
+        spec = importlib.util.spec_from_file_location("badge_kit", ROOT / "src" / "badge-kit.py")
+        kit = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(kit)
+        self.assertEqual(drawn, kit.files_for(dict(name="status", label="Status", message="Active",
+                                                   style="blueprint-flat", print="blackprint"))["static/status.svg"])
+        self.assertRan(self.c.run(mode="check", theme="blackprint")[0])
+        self.assertNotEqual(self.c.run(mode="check")[0].returncode, 0, "the plate's own print is not what was drawn")
 
     def test_a_detached_checkout_is_refused_before_anything_is_pushed(self):
         before = self.c.head()
