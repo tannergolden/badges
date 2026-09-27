@@ -285,10 +285,17 @@ so a fix here reaches you the moment it is published.
 The action renders into **your** checkout, never its own, so the committed SVGs
 land beside your data file exactly where you asked for them.
 
-One stub per kit, or one for the whole page:
-[`tannergolden/markdown`](https://github.com/tannergolden/markdown) calls this
-kit, the banners and the trophies from a single workflow, each at its own
-hour, so a README that wants all three needs one stub rather than three.
+> [!TIP]
+> **One stub for every kit you use.** The workflows below run the badges on
+> their own. To run them with the banners, the trophies or both, add the
+> [Markdown stub](https://github.com/tannergolden/markdown#-use-it-in-your-readme)
+> instead: one workflow that runs each kit at its own hour, so a repository
+> never needs a stub per kit. It fits any mix of the kits, not only all
+> three: give it a cron for each kit you use and leave the rest out. It
+> renders and commits the badges from `.github/badges.yml` in their hour, and
+> takes one `theme` for the whole page. A workflow that measures live values,
+> like the one under [Refresh live values on a schedule](#refresh-live-values-on-a-schedule),
+> still runs beside it.
 
 ### Render on every push, and commit what changed
 
