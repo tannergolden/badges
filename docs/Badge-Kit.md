@@ -153,9 +153,10 @@ current one, so a plate whose value changes, a build flipping between
 ### Your own themes
 
 The prints are data. The kit's own are [`src/themes.json`](../src/themes.json),
-one a line, the same file the banners draw from, so a print for everyone is a
-line there. A repository adds its own in `.github/themes.json`, in the same
-shape: each theme's name, and its colours.
+one a line, and match the banners' catalog line for line, so a print for
+everyone is the same line in each. A repository adds its own in
+`.github/themes.json`, in the same shape, with no change to either kit: each
+theme's name, and its colours.
 
 ```json
 {
