@@ -150,6 +150,37 @@ static one before a word is read.
 current one, so a plate whose value changes, a build flipping between
 `Passing` and `Failing`, keeps one width and never shifts the row it sits in.
 
+### Your own themes
+
+The prints are data. The kit's own are [`src/themes.json`](../src/themes.json),
+one a line, the same file the banners draw from, so a print for everyone is a
+line there. A repository adds its own in `.github/themes.json`, in the same
+shape: each theme's name, and its colours.
+
+```json
+{
+  "goldprint": {"label": "Goldprint", "line": "#B8860B", "ink": "#5C4400", "sheet": "#7A5B00"},
+  "duskprint": {"line": "iris", "ink": "navy", "sheet": "indigo"}
+}
+```
+
+| Field   | Required | Meaning                                                     |
+| :------ | :------- | :---------------------------------------------------------- |
+| `line`  | yes      | The lines and the value block by day.                       |
+| `ink`   | yes      | The label's lettering and icon by day.                      |
+| `sheet` | yes      | The paper by night.                                         |
+| `night` | no       | The lines and lettering on that sheet; `white` if left out. |
+| `label` | no       | The name the banners letter; the theme's name, capitalised. |
+
+A colour is a palette token, as the kit's own are, or `#RRGGBB`. A name is
+lowercase letters, digits and hyphens, and cannot be one the kits already
+draw, `rainbowprint` included. `print: goldprint` on a plate, or `goldprint`
+as the `theme` input, then draws in it; the banners and their elements read
+the same file, so one theme serves the whole page. The file is read on every
+run that has a data file, and a mistake in it fails the run with every fault
+named rather than drawing a colour nobody chose. A live plate keeps its
+state's print whatever the theme.
+
 ---
 
 ## 🗂️ The Data File
@@ -290,7 +321,7 @@ defaults to `GITHUB_WORKSPACE` and then the working directory:
 | :-------------------------- | :------------------------------------------------------------------ |
 | `--check`                   | Verify committed SVGs match the data file. Writes nothing.          |
 | `--set NAME=MESSAGE[:COLOR]`| Update one value in place, then render. Repeatable.                 |
-| `--theme PRINT`             | Draw every static plate in `PRINT` instead of its own print.        |
+| `--theme PRINT`             | Draw every static plate in `PRINT`, a repository's own included.    |
 | `--randomize-static SEED`   | Rotate decorative static colors, keyed by `SEED`, then render.      |
 | `--markdown`                | Print one ready-to-paste embed line per badge. Writes nothing.      |
 | `--icons`, `--palette`      | List the registries.                                                |

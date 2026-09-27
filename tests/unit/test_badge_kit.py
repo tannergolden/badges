@@ -463,6 +463,84 @@ PLATES = """badges:
 """
 
 
+GOLD = '{"goldprint": {"label": "Goldprint", "line": "#B8860B", "ink": "#5C4400", "sheet": "#7A5B00"}}'
+
+
+class Themes(unittest.TestCase):
+    """The prints are data: the kit's own catalog, and a repository's own in .github/themes.json."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / ".github").mkdir()
+        self.addCleanup(bk.use_themes, None)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, text: str) -> None:
+        (self.root / ".github" / "themes.json").write_text(text, encoding="utf-8")
+
+    def test_the_catalog_is_the_eleven_prints_in_the_banners_order(self):
+        import json
+        catalog = json.loads(bk.THEMES_CATALOG.read_text(encoding="utf-8"))
+        self.assertEqual((list(catalog), len(catalog)), (list(bk.BUILTIN), 11))
+        self.assertEqual(list(bk.SPECTRUM), list(catalog)[:9], "the spectrum is the catalog's first nine")
+        for name, spec in catalog.items():
+            self.assertEqual(bk.theme_errors("x" + name, spec), [], name)
+            self.assertTrue(all(v in bk.PALETTE for k, v in spec.items() if k != "label"), f"{name} is in tokens")
+
+    def test_a_theme_in_hex_draws_a_plate_in_its_colours_by_day_and_by_night(self):
+        self.write(GOLD)
+        self.assertEqual(bk.use_themes(self.root), ("goldprint",))
+        plate = dict(name="x", label="A", message="B", style="blueprint-flat", print="goldprint")
+        self.assertEqual(bk.validate([plate]), [])
+        files = bk.files_for(plate)
+        self.assertIn('stroke="#B8860B"', files["static/x.svg"])
+        self.assertIn('fill="#5C4400"', files["static/x.svg"])
+        self.assertIn('fill="#7A5B00"', files["static/x-dark.svg"])
+        self.assertIn('fill="#FFFFFF"', files["static/x-dark.svg"], "lettered in white when night is left out")
+
+    def test_a_theme_in_tokens_draws_exactly_as_the_same_tokens_would(self):
+        self.write('{"navyprint": {"line": "cobalt", "ink": "navy", "sheet": "navy"}}')
+        bk.use_themes(self.root)
+        plate = dict(name="x", label="A", message="B", style="blueprint-flat")
+        ours = bk.files_for(dict(plate, print="navyprint"))
+        theirs = bk.files_for(dict(plate, print="blueprint"))
+        self.assertEqual(ours.keys(), theirs.keys())
+        import re
+
+        def same_ids(svg: str) -> str:
+            # Only the ids differ, since their seed carries the print's name.
+            return svg.replace(re.search(r'id="p([0-9a-f]{6})"', svg).group(1), "uid")
+
+        for path in ours:
+            self.assertEqual(same_ids(ours[path]), same_ids(theirs[path]), path)
+
+    def test_every_fault_in_a_themes_file_is_named(self):
+        self.write('{"blackprint": {"line": "#000000", "ink": "#000000", "sheet": "#000000"},'
+                   ' "Gold Print": {"line": "iris", "ink": "indigo", "sheet": "indigo"},'
+                   ' "tinprint": {"line": "tin", "ink": "black", "sheet": "black"},'
+                   ' "irisprint": {"line": "iris", "ink": "indigo"},'
+                   ' "oddprint": {"line": "iris", "ink": "indigo", "sheet": "indigo", "shade": "black"},'
+                   ' "rainbowprint": {"line": "iris", "ink": "indigo", "sheet": "indigo"}}')
+        with self.assertRaises(bk.BadgeError) as err:
+            bk.use_themes(self.root)
+        for fault in ("blackprint: the kits already draw", "'Gold Print'", "'tin' is neither", "no 'sheet'",
+                      "'shade' is not", "rainbowprint: the kits already draw"):
+            self.assertIn(fault, str(err.exception))
+        self.write("[]")
+        with self.assertRaisesRegex(bk.BadgeError, "expected a map"):
+            bk.use_themes(self.root)
+
+    def test_themes_from_one_repository_never_reach_the_next(self):
+        self.write(GOLD)
+        bk.use_themes(self.root)
+        self.assertIn("goldprint", bk.PRINTS)
+        self.assertEqual(bk.use_themes(self.root / "elsewhere"), ())
+        self.assertEqual(list(bk.PRINTS), list(bk.BUILTIN))
+
+
 class Blueprint(unittest.TestCase):
     """Every style has a plate twin, drawn in a print, in two files."""
 
@@ -676,6 +754,54 @@ class BlueprintCli(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("blackprint", out)
         self.assertFalse(self.out.exists(), "nothing is drawn")
+
+    def themes(self, text: str) -> None:
+        (self.root / ".github" / "themes.json").write_text(text, encoding="utf-8")
+        self.addCleanup(bk.use_themes, None)  # the next test starts from the kit's own prints
+
+    def test_a_repository_theme_draws_the_static_plates_in_its_own_colours(self):
+        self.themes(GOLD)
+        self.data.write_text(PLATES.replace("print: greenprint", "print: goldprint"), encoding="utf-8")
+        code, out = self.render()
+        self.assertEqual(code, 0, out)
+        self.assertIn("#B8860B", (self.out / "static" / "status.svg").read_text(encoding="utf-8"))
+        self.assertIn("#7A5B00", (self.out / "static" / "status-dark.svg").read_text(encoding="utf-8"))
+        self.assertEqual(self.render("--check")[0], 0, "and check draws it the same way")
+
+    def test_the_theme_option_can_name_a_repository_theme(self):
+        self.themes(GOLD)
+        self.render()
+        build = (self.out / "dynamic" / "build.svg").read_text(encoding="utf-8")
+        code, out = self.render("--theme", "goldprint")
+        self.assertEqual(code, 0, out)
+        self.assertIn("#5C4400", (self.out / "static" / "status.svg").read_text(encoding="utf-8"))
+        self.assertEqual((self.out / "dynamic" / "build.svg").read_text(encoding="utf-8"), build,
+                         "a live plate keeps its state's colours")
+
+    def test_a_theme_nobody_defined_points_at_the_themes_file(self):
+        code, out = self.render("--theme", "goldprint")
+        self.assertEqual(code, 1)
+        self.assertIn(".github/themes.json", out)
+        self.data.write_text(PLATES.replace("print: greenprint", "print: goldprint"), encoding="utf-8")
+        code, out = self.render()
+        self.assertEqual(code, 1)
+        self.assertIn(".github/themes.json", out)
+
+    def test_a_broken_themes_file_fails_the_run_with_every_fault_named(self):
+        self.themes('{"blackprint": {"line": "#000000", "ink": "#000000", "sheet": "#000000"},'
+                    ' "tinprint": {"line": "tin", "ink": "black", "sheet": "black"}}')
+        code, out = self.render()
+        self.assertEqual(code, 1)
+        self.assertIn("blackprint: the kits already draw", out)
+        self.assertIn("'tin' is neither", out)
+        self.assertFalse(self.out.exists(), "nothing is drawn")
+        self.themes("{not json")
+        self.assertIn("JSON", self.render()[1])
+
+    def test_check_without_a_data_file_skips_before_it_reads_the_themes(self):
+        self.data.unlink()
+        self.themes("{not json")
+        self.assertEqual(self.render("--check")[0], 0, "a repository that does not use badges is not failed")
 
     def test_check_catches_a_stale_night_file(self):
         self.render()

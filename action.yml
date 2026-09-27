@@ -43,10 +43,11 @@ inputs:
     description: >-
       The print every static plate is drawn in, instead of the one it names:
       blueprint, redprint, orangeprint, yellowprint, greenprint, tealprint,
-      indigoprint, purpleprint, pinkprint, brownprint, blackprint, or
-      rainbowprint to follow the colour the page's banners are in. A live
-      plate keeps its state's print and a classic badge its colours. Empty:
-      each plate's own print. The Markdown workflow passes its theme here.
+      indigoprint, purpleprint, pinkprint, brownprint, blackprint,
+      rainbowprint to follow the colour the page's banners are in, or a theme
+      of the repository's own .github/themes.json. A live plate keeps its
+      state's print and a classic badge its colours. Empty: each plate's own
+      print. The Markdown workflow passes its theme here.
     required: false
     default: ''
   randomize-seed:

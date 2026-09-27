@@ -1,0 +1,13 @@
+{
+  "redprint":    {"label": "Redprint", "line": "cherry", "ink": "maroon", "sheet": "cherry"},
+  "orangeprint": {"label": "Orangeprint", "line": "tangerine", "ink": "brick", "sheet": "tangerine", "night": "black"},
+  "yellowprint": {"label": "Yellowprint", "line": "mustard", "ink": "charcoal", "sheet": "mustard", "night": "black"},
+  "greenprint":  {"label": "Greenprint", "line": "forest", "ink": "forest", "sheet": "forest"},
+  "tealprint":   {"label": "Tealprint", "line": "teal", "ink": "ocean", "sheet": "ocean"},
+  "blueprint":   {"label": "Blueprint", "line": "cobalt", "ink": "navy", "sheet": "navy"},
+  "indigoprint": {"label": "Indigoprint", "line": "iris", "ink": "indigo", "sheet": "indigo"},
+  "purpleprint": {"label": "Purpleprint", "line": "plum", "ink": "amethyst", "sheet": "amethyst"},
+  "pinkprint":   {"label": "Pinkprint", "line": "magenta", "ink": "ruby", "sheet": "ruby"},
+  "brownprint":  {"label": "Brownprint", "line": "brown", "ink": "brown", "sheet": "brown"},
+  "blackprint":  {"label": "Blackprint", "line": "charcoal", "ink": "black", "sheet": "charcoal"}
+}

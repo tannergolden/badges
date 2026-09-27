@@ -205,6 +205,19 @@ banners' lock records which colour of the spectrum their last update took,
 and the plate follows it, so a row of plates changes colour with the header
 above it. Without banners it is the redprint, the first of the spectrum.
 
+**Your own theme.** The prints are data, and a repository adds its own in
+`.github/themes.json`: a name, and a colour for the lines, the lettering and
+the night sheet, each a palette token or `#RRGGBB`. `print: goldprint` then
+draws a plate in it, and the banners read the same file, so one theme serves
+the whole page. [`docs/Badge-Kit.md`](docs/Badge-Kit.md#your-own-themes) has
+the fields.
+
+```json
+{
+  "goldprint": {"label": "Goldprint", "line": "#B8860B", "ink": "#5C4400", "sheet": "#7A5B00"}
+}
+```
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-release-dark.svg"><img alt="Release: v2.4.0" src="assets/badges/static/plate-release.svg"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-bundle-dark.svg"><img alt="Bundle: 42 kB" src="assets/badges/static/plate-bundle.svg"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/badges/static/plate-docs-dark.svg"><img alt="Docs: Live" src="assets/badges/static/plate-docs.svg"></picture>
@@ -409,7 +422,7 @@ repository.
 | `data`           | `.github/badges.yml` | Badge data file, relative to the repository root.                        |
 | `out`            | `assets/badges`      | Output directory for the committed SVGs.                                 |
 | `set`            | none                 | Newline-separated `NAME=MESSAGE[:COLOR]` updates applied first.          |
-| `theme`          | none                 | Draw every static plate in this print; live plates keep their states.    |
+| `theme`          | none                 | Draw every static plate in this print, a repository's own included.      |
 | `randomize-seed` | none                 | Rotate decorative colors, keyed by this seed.                            |
 | `commit`         | `false`              | `true` commits what the run changed, as the kit's author, and pushes it. |
 | `commit-message` | per mode             | Subject of that commit. The body is written for you.                     |

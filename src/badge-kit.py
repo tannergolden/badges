@@ -571,23 +571,28 @@ BLUEPRINT = "blueprint-"
 # A print is the colour a drawing is reproduced in: `line` for its linework
 # and `ink` for its lettering on white paper by day, and by night the `sheet`
 # those lines are printed on, lettered in `night` - white on the deep sheets,
-# black on the two bright ones white could not be read on. The same eleven,
-# in the same tokens, as tannergolden/banners, so a plate matches the banner
-# above it.
-PRINTS = {
-    "redprint": dict(line="cherry", ink="maroon", sheet="cherry"),
-    "orangeprint": dict(line="tangerine", ink="brick", sheet="tangerine", night="black"),
-    "yellowprint": dict(line="mustard", ink="charcoal", sheet="mustard", night="black"),
-    "greenprint": dict(line="forest", ink="forest", sheet="forest"),
-    "tealprint": dict(line="teal", ink="ocean", sheet="ocean"),
-    "blueprint": dict(line="cobalt", ink="navy", sheet="navy"),
-    "indigoprint": dict(line="iris", ink="indigo", sheet="indigo"),
-    "purpleprint": dict(line="plum", ink="amethyst", sheet="amethyst"),
-    "pinkprint": dict(line="magenta", ink="ruby", sheet="ruby"),
-    "brownprint": dict(line="brown", ink="brown", sheet="brown"),
-    "blackprint": dict(line="charcoal", ink="black", sheet="charcoal"),
-}
+# black on the two bright ones white could not be read on.
+#
+# The prints are data. themes.json beside this file holds the kit's own, one
+# a line: the same eleven, in the same tokens, as tannergolden/banners, so a
+# plate matches the banner above it. A repository adds its own in
+# .github/themes.json in the same shape, and the banners read that file too,
+# so one theme serves the whole page (see `use_themes`). A colour is a palette
+# token or #RRGGBB; `label` and `night` may be left out.
+THEMES_CATALOG = Path(__file__).with_name("themes.json")
+THEMES_FILE = Path(".github") / "themes.json"
+THEME_FIELDS = ("label", "line", "ink", "sheet", "night")
+
+
+def _load_catalog() -> dict[str, dict]:
+    import json
+    return json.loads(THEMES_CATALOG.read_text(encoding="utf-8"))
+
+
+PRINTS = _load_catalog()
+BUILTIN = tuple(PRINTS)
 DEFAULT_PRINT = "blueprint"
+_ADDED: set[str] = set()
 
 # The rainbow, in the banners' order. A plate in `rainbowprint` is drawn in
 # the colour the page's banners are in now: the banners kit remembers which
@@ -598,6 +603,59 @@ SPECTRUM = ("redprint", "orangeprint", "yellowprint", "greenprint", "tealprint",
             "purpleprint", "pinkprint")
 RAINBOW = "rainbowprint"
 BANNERS_LOCK = Path(".github") / "banners.lock.json"
+
+
+def _is_colour(value: object) -> bool:
+    """A palette token, or a colour written #RRGGBB."""
+    return isinstance(value, str) and (value in PALETTE or bool(_HEX_COLOR.match(value)))
+
+
+def theme_errors(name: object, spec: object) -> list[str]:
+    """What is wrong with one theme a repository defines, each said precisely.
+    The banners kit holds a theme to the same rules, so a file one accepts the
+    other does."""
+    if not isinstance(name, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", name):
+        return [f"{name!r}: a theme's name is lowercase letters, digits and hyphens"]
+    if name in BUILTIN or name == RAINBOW:
+        return [f"{name}: the kits already draw a theme by that name; give yours another"]
+    if not isinstance(spec, dict):
+        return [f"{name}: expected a map of its colours"]
+    out = [f"{name}: {k!r} is not a field (one of {', '.join(THEME_FIELDS)})"
+           for k in spec if k not in THEME_FIELDS]
+    out += [f"{name}: no {k!r}" for k in ("line", "ink", "sheet") if k not in spec]
+    out += [f"{name}: {k} {spec[k]!r} is neither a palette token nor #RRGGBB"
+            for k in ("line", "ink", "sheet", "night") if k in spec and not _is_colour(spec[k])]
+    if "label" in spec and not isinstance(spec["label"], str):
+        out.append(f"{name}: label is text")
+    return out
+
+
+def use_themes(root: Path | None) -> tuple[str, ...]:
+    """The prints: the kit's own and the ones the repository at `root` defines
+    in .github/themes.json. Replaces whatever another repository added before,
+    so the prints are always the kit's and this one's. Returns the
+    repository's names; raises BadgeError naming everything wrong with the
+    file."""
+    import json
+    for name in _ADDED:
+        PRINTS.pop(name, None)
+    _ADDED.clear()
+    path = Path(root) / THEMES_FILE if root is not None else None
+    if path is None or not path.is_file():
+        return ()
+    try:
+        given = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise BadgeError(f"{THEMES_FILE}: cannot read it as JSON ({exc})") from exc
+    if not isinstance(given, dict):
+        raise BadgeError(f"{THEMES_FILE}: expected a map of each theme's name to its colours")
+    problems = [p for name, spec in given.items() for p in theme_errors(name, spec)]
+    if problems:
+        raise BadgeError(f"{THEMES_FILE}: " + "; ".join(problems))
+    for name, spec in given.items():
+        PRINTS[name] = dict(spec)
+        _ADDED.add(name)
+    return tuple(given)
 
 
 def rainbow_shade(root: Path) -> str:
@@ -751,7 +809,8 @@ def _block(left: float, w: int, h: float, rx: float) -> str:
 
 def _plate(label: str, message: str, icon: str | None, style: str,
            reserve: tuple[str, ...], col: dict, seed: str) -> str:
-    """Draw one plate in the colours `col` names (palette tokens):
+    """Draw one plate in the colours `col` names (palette tokens, or #RRGGBB
+    from a repository's own theme):
     paper, wash (or None), grid and its opacity, block, ink (label and icon),
     letters (the value), frame and its opacity."""
     if style not in BLUEPRINT_STYLES:
@@ -774,7 +833,7 @@ def _plate(label: str, message: str, icon: str | None, style: str,
     vw = (max(_bp_width(v, "num", size, ls) for v in vals) + 2 * pad) if any(vals) else 0.0
     w = round(left + vw)
     uid = hashlib.md5(seed.encode()).hexdigest()[:6]
-    hx = lambda token: PALETTE[token]
+    hx = lambda token: token.upper() if _HEX_COLOR.match(token) else PALETTE[token]
     corner = f' rx="{_fx(rx)}"' if rx else ""
     whole = f'width="{w}" height="{_fx(h)}"{corner}'
 
@@ -827,7 +886,8 @@ def render_blueprint(label: str, message: str, icon: str | None = None,
     file. `reserve` sizes the value block for the widest of these values too,
     so a value that changes keeps the plate the same width."""
     if tone not in PRINTS:
-        raise BadgeError(f"unknown print {tone!r} - one of {', '.join(PRINTS)}")
+        raise BadgeError(f"unknown print {tone!r} - one of {', '.join(PRINTS)}; "
+                         "a repository adds its own in .github/themes.json")
     p = PRINTS[tone]
     night = p.get("night", "white")
     if dark:
@@ -1043,7 +1103,8 @@ def _blueprint_errors(b: dict, style: str) -> list[str]:
                        "message_color and name one with 'print' "
                        f"({', '.join(PRINTS)})")
         if tone and tone != RAINBOW and tone not in PRINTS:
-            out.append(f"unknown print {tone!r} (one of {', '.join(PRINTS)}, or {RAINBOW})")
+            out.append(f"unknown print {tone!r} (one of {', '.join(PRINTS)}, or {RAINBOW}; "
+                       "a repository adds its own in .github/themes.json)")
     caps = BLUEPRINT_STYLES[style]["caps"]
     for field, face, text in (("label", "meta", str(b.get("label", ""))),
                               ("message", "num", str(b.get("message", ""))),
@@ -1832,8 +1893,9 @@ def main(argv: list[str] | None = None) -> int:
                          "the ISO week, so colors rotate weekly), then re-render")
     ap.add_argument("--theme", default="", metavar="PRINT",
                     help="draw every static plate in this print instead of the one it "
-                         "names (rainbowprint follows the banners); live plates and "
-                         "classic badges keep their colours")
+                         "names: a print, rainbowprint (which follows the banners), or "
+                         "one of .github/themes.json; live plates and classic badges "
+                         "keep their colours")
     ap.add_argument("--icons", action="store_true", help="list the icon registry")
     ap.add_argument("--palette", action="store_true", help="list the palette tokens")
     ap.add_argument("--self-test", action="store_true",
@@ -1910,16 +1972,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.self_test:
         return self_test()
 
-    if args.theme and args.theme != RAINBOW and args.theme not in PRINTS:
-        print(f"::error::--theme: unknown print {args.theme!r} "
-              f"(one of {', '.join(PRINTS)}, or {RAINBOW})", file=sys.stderr)
-        return 1
-
     if not args.data.exists():
         if args.check:
             print(f"::notice::no {args.data.name}; badge kit not in use, skipping check.")
             return 0
         print(f"::error::badge data file not found: {args.data}", file=sys.stderr)
+        return 1
+
+    try:
+        use_themes(root)  # a repository's own themes, beside the kit's, before a plate names one
+    except BadgeError as e:
+        print(f"::error::{e}", file=sys.stderr)
+        return 1
+    if args.theme and args.theme != RAINBOW and args.theme not in PRINTS:
+        print(f"::error::--theme: unknown print {args.theme!r} "
+              f"(one of {', '.join(PRINTS)}, or {RAINBOW}; a repository adds its own "
+              f"in .github/themes.json)", file=sys.stderr)
         return 1
 
     if args.set:
