@@ -430,6 +430,12 @@ repository.
 Two outputs: `changed` is `'true'` when the run modified a tracked file, and
 `commit` is the SHA the run pushed, or empty when it made no commit.
 
+`theme` is how a page is drawn in one theme: the
+[Markdown workflow](https://github.com/tannergolden/markdown) passes its own
+here, and to the banners, so the plates match the header above them. A check
+run takes the same theme as the render it checks. Live plates keep their
+state's colours and classic badges theirs, whatever the theme.
+
 ---
 
 ## ⚙️ The Data File
@@ -547,6 +553,7 @@ badges/
 ├── src/
 │   ├── badge-kit.py           the renderer
 │   ├── localize-badges.py     the Markdown codemod
+│   ├── themes.json            the prints, one a line, the banners' catalog line for line
 │   └── fonts/                 the plates' outlined lettering (SIL OFL 1.1)
 ├── tests/unit/                the kit's behavioural tests
 ├── .github/badges.yml         this repository's own badges
